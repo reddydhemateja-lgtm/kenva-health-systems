@@ -1,0 +1,16 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# Proxy API requests to Render backend
+[[redirects]]
+  from = "/api/*"
+  to = "https://kenva-backend.onrender.com/api/:splat"
+  status = 200
+  force = true
+
+# Single Page Application fallback routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

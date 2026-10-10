@@ -1,0 +1,494 @@
+{
+  "users": [
+    {
+      "id": "USR-ADMIN-01",
+      "email": "admin@kenva.local",
+      "password": "$2a$10$qk50USWHOfiWTep1Y6FqNudPgnbAvKxxUQUs8dP4SBbe8kLiGzOnm",
+      "role": "ADMIN",
+      "name": "Kenva Health Systems Admin",
+      "phone": "+91 94400 11223",
+      "created_at": "2026-10-09T16:37:16.371Z"
+    },
+    {
+      "id": "USR-STAFF-01",
+      "email": "hospital@kenva.local",
+      "password": "$2a$10$GIKuksVmWn3iX4MstYxR8OpkJR7hlup3s72hZI78D4/2h53AF2j1W",
+      "role": "HOSPITAL",
+      "name": "Metro Care Hospital Staff",
+      "phone": "+91 98480 22334",
+      "created_at": "2026-10-09T16:37:16.371Z"
+    },
+    {
+      "id": "USR-PAT-01",
+      "email": "patient@kenva.local",
+      "password": "$2a$10$GIKuksVmWn3iX4MstYxR8OpkJR7hlup3s72hZI78D4/2h53AF2j1W",
+      "role": "PATIENT",
+      "name": "Kalyan Varma",
+      "phone": "+91 98765 43210",
+      "created_at": "2026-10-09T16:37:16.371Z"
+    },
+    {
+      "id": "USR-PAT-02",
+      "email": "pending.patient@kenva.local",
+      "password": "$2a$10$GIKuksVmWn3iX4MstYxR8OpkJR7hlup3s72hZI78D4/2h53AF2j1W",
+      "role": "PATIENT",
+      "name": "Ananya Rao",
+      "phone": "+91 91234 56789",
+      "created_at": "2026-10-09T16:37:16.371Z"
+    }
+  ],
+  "patient_profiles": [
+    {
+      "patient_id": "KEN-P-1001",
+      "user_id": "USR-PAT-01",
+      "dob": "1992-06-15",
+      "city": "Tirupati",
+      "approval_status": "APPROVED",
+      "booking_permission": 1,
+      "approved_at": "2026-10-09T16:37:16.371Z",
+      "rejection_reason": null
+    },
+    {
+      "patient_id": "KEN-P-1002",
+      "user_id": "USR-PAT-02",
+      "dob": "1997-09-20",
+      "city": "Tirupati",
+      "approval_status": "PENDING_APPROVAL",
+      "booking_permission": 0,
+      "approved_at": null,
+      "rejection_reason": null
+    }
+  ],
+  "hospitals": [
+    {
+      "id": "HOSP-101",
+      "name": "Metro Care Diagnostic Center",
+      "code": "MCDI",
+      "city": "Tirupati, AP",
+      "address": "Near MR Palli Circle, Air Bypass Road, Tirupati, AP 517502",
+      "contact_email": "clinical@mcdi.kenva.local",
+      "contact_phone": "+91 877 2255001",
+      "accreditation": "NABL & ICMR Accredited Diagnostic Center",
+      "is_fictional": 0
+    },
+    {
+      "id": "HOSP-102",
+      "name": "Sri Venkateswara Specialty Clinic",
+      "code": "SVSC",
+      "city": "Tirupati, AP",
+      "address": "Opposite SVIMS Hospital Main Gate, Alipiri Road, Tirupati, AP 517507",
+      "contact_email": "info@svsc.kenva.local",
+      "contact_phone": "+91 877 2288002",
+      "accreditation": "ISO 15189 Certified Medical Laboratory",
+      "is_fictional": 0
+    },
+    {
+      "id": "HOSP-103",
+      "name": "Apex Diagnostic Center",
+      "code": "APEX",
+      "city": "Tirupati, AP",
+      "address": "Near MR Palli, Renigunta Road, Tirupati, AP 517501",
+      "contact_email": "pathology@apex.kenva.local",
+      "contact_phone": "+91 877 2244003",
+      "accreditation": "NABH Accredited Diagnostic Center",
+      "is_fictional": 0
+    }
+  ],
+  "hospital_staff": [
+    {
+      "id": "HS-01",
+      "user_id": "USR-STAFF-01",
+      "hospital_id": "HOSP-101",
+      "department": "Clinical Pathology & Specimen Intake",
+      "role_title": "Senior Specimen Technician"
+    }
+  ],
+  "booking_access_codes": [
+    {
+      "id": "BC-1001",
+      "code": "KEN-CODE-8921-X7",
+      "patient_id": "KEN-P-1001",
+      "generated_by": "USR-ADMIN-01",
+      "is_redeemed": 1,
+      "redeemed_at": "2026-10-09T16:37:16.371Z",
+      "expires_at": "2026-11-08T16:37:16.618Z",
+      "created_at": "2026-10-09T16:37:16.371Z"
+    }
+  ],
+  "appointments": [
+    {
+      "appointment_id": "APT-2026-8812",
+      "patient_id": "KEN-P-1001",
+      "hospital_id": "HOSP-101",
+      "preferred_date": "2026-10-14",
+      "preferred_time": "09:30 AM",
+      "reason": "Annual Comprehensive Metabolic & Diabetes Screening",
+      "symptoms": "Routine health checkup.",
+      "status": "CONFIRMED",
+      "notes": "Fast 10-12 hours prior to venous blood draw.",
+      "created_at": "2026-10-09T16:37:16.371Z",
+      "updated_at": "2026-10-09T16:37:16.371Z"
+    },
+    {
+      "appointment_id": "APT-2026-9044",
+      "patient_id": "KEN-P-1001",
+      "hospital_id": "HOSP-103",
+      "preferred_date": "2026-10-20",
+      "preferred_time": "02:00 PM",
+      "reason": "Follow-up Diagnostic Thyroid Panel",
+      "symptoms": "Mild seasonal symptoms.",
+      "status": "PENDING_CONFIRMATION",
+      "notes": "Awaiting scheduling confirmation from hospital intake.",
+      "created_at": "2026-10-09T16:37:16.371Z",
+      "updated_at": "2026-10-09T16:37:16.371Z"
+    }
+  ],
+  "test_orders": [
+    {
+      "order_id": "ORD-9021",
+      "appointment_id": "APT-2026-8812",
+      "patient_id": "KEN-P-1001",
+      "hospital_id": "HOSP-101",
+      "test_type": "Comprehensive Metabolic & Lipid Panel (CMP + HbA1c)",
+      "ordering_physician": "Dr. R. K. Prasad, MD",
+      "urgency": "ROUTINE",
+      "status": "REPORT_AVAILABLE",
+      "notes": "Standard diagnostic wellness panel.",
+      "created_at": "2026-10-06T16:37:16.623Z"
+    },
+    {
+      "order_id": "ORD-9088",
+      "appointment_id": null,
+      "patient_id": "KEN-P-1001",
+      "hospital_id": "HOSP-101",
+      "test_type": "Thyroid Profile & Vitamin D3 Screen",
+      "ordering_physician": "Dr. S. K. Ramesh, MD",
+      "urgency": "URGENT",
+      "status": "TESTING_IN_PROGRESS",
+      "notes": "Targeted endocrinology screen.",
+      "created_at": "2026-10-08T16:37:16.623Z"
+    }
+  ],
+  "samples": [
+    {
+      "sample_id": "SMP-77412",
+      "order_id": "ORD-9021",
+      "patient_id": "KEN-P-1001",
+      "hospital_id": "HOSP-101",
+      "sample_type": "Venous Whole Blood & Serum",
+      "container_id": "CONT-RED-88201",
+      "collected_at": "2026-10-07T16:37:16.625Z",
+      "collected_by": "Metro Care Phlebotomist",
+      "current_workflow_stage": 10,
+      "status_label": "Report Available",
+      "created_at": "2026-10-07T16:37:16.625Z"
+    },
+    {
+      "sample_id": "SMP-99120",
+      "order_id": "ORD-9088",
+      "patient_id": "KEN-P-1001",
+      "hospital_id": "HOSP-101",
+      "sample_type": "Plasma & Serum",
+      "container_id": "CONT-GOLD-44109",
+      "collected_at": "2026-10-09T04:37:16.636Z",
+      "collected_by": "Metro Care Staff",
+      "current_workflow_stage": 8,
+      "status_label": "Testing in Progress",
+      "created_at": "2026-10-09T04:37:16.636Z"
+    }
+  ],
+  "logistics_events": [
+    {
+      "id": "LOG-5001",
+      "sample_id": "SMP-77412",
+      "courier_name": "Kenva ColdChain Logistics (Tirupati Hub)",
+      "tracking_number": "TRACK-KVA-981244",
+      "pickup_time": "2026-10-08T00:37:16.626Z",
+      "origin_facility": "Metro Care Diagnostic Center",
+      "destination_lab": "Kenva Central Reference Laboratory #1 (Tirupati)",
+      "temperature_celsius": 3.8,
+      "current_status": "DELIVERED",
+      "updated_at": "2026-10-08T04:37:16.626Z"
+    }
+  ],
+  "laboratory_records": [
+    {
+      "id": "LABREC-8001",
+      "sample_id": "SMP-77412",
+      "lab_name": "Kenva Central Reference Laboratory #1 (Tirupati)",
+      "technician_name": "Dr. K. Saroja, MD (Chief Pathologist)",
+      "received_at": "2026-10-08T05:37:16.627Z",
+      "testing_started_at": "2026-10-08T10:37:16.627Z",
+      "testing_completed_at": "2026-10-09T06:37:16.627Z",
+      "test_results_json": "[{\"parameter\":\"Fasting Plasma Glucose\",\"value\":\"94 mg/dL\",\"reference\":\"70 - 99 mg/dL\",\"status\":\"NORMAL\"},{\"parameter\":\"HbA1c\",\"value\":\"5.4 %\",\"reference\":\"< 5.7 %\",\"status\":\"OPTIMAL\"},{\"parameter\":\"Serum Creatinine\",\"value\":\"0.9 mg/dL\",\"reference\":\"0.6 - 1.2 mg/dL\",\"status\":\"NORMAL\"},{\"parameter\":\"Total Cholesterol\",\"value\":\"182 mg/dL\",\"reference\":\"< 200 mg/dL\",\"status\":\"NORMAL\"},{\"parameter\":\"Triglycerides\",\"value\":\"115 mg/dL\",\"reference\":\"< 150 mg/dL\",\"status\":\"NORMAL\"},{\"parameter\":\"HDL Cholesterol\",\"value\":\"55 mg/dL\",\"reference\":\"> 40 mg/dL\",\"status\":\"OPTIMAL\"},{\"parameter\":\"LDL Cholesterol\",\"value\":\"104 mg/dL\",\"reference\":\"< 100 mg/dL\",\"status\":\"SLIGHTLY_ELEVATED\"}]",
+      "lab_notes": "Specimen cold chain maintained at 3.8°C throughout transit from MR Palli center. All quality calibration benchmarks satisfied."
+    }
+  ],
+  "reports": [
+    {
+      "report_id": "REP-2026-4491",
+      "order_id": "ORD-9021",
+      "patient_id": "KEN-P-1001",
+      "hospital_id": "HOSP-101",
+      "report_title": "Comprehensive Metabolic & Diabetes Diagnostic Report",
+      "summary_findings": "Fasting glucose and HbA1c levels are within optimal range (5.4%). Lipid parameters show mild elevation in LDL cholesterol (104 mg/dL). Lifestyle modifications recommended.",
+      "detailed_results_json": "[{\"parameter\":\"Fasting Plasma Glucose\",\"value\":\"94 mg/dL\",\"reference\":\"70 - 99 mg/dL\",\"status\":\"NORMAL\"},{\"parameter\":\"HbA1c\",\"value\":\"5.4 %\",\"reference\":\"< 5.7 %\",\"status\":\"OPTIMAL\"},{\"parameter\":\"Serum Creatinine\",\"value\":\"0.9 mg/dL\",\"reference\":\"0.6 - 1.2 mg/dL\",\"status\":\"NORMAL\"},{\"parameter\":\"Total Cholesterol\",\"value\":\"182 mg/dL\",\"reference\":\"< 200 mg/dL\",\"status\":\"NORMAL\"},{\"parameter\":\"Triglycerides\",\"value\":\"115 mg/dL\",\"reference\":\"< 150 mg/dL\",\"status\":\"NORMAL\"},{\"parameter\":\"HDL Cholesterol\",\"value\":\"55 mg/dL\",\"reference\":\"> 40 mg/dL\",\"status\":\"OPTIMAL\"},{\"parameter\":\"LDL Cholesterol\",\"value\":\"104 mg/dL\",\"reference\":\"< 100 mg/dL\",\"status\":\"SLIGHTLY_ELEVATED\"}]",
+      "pathologist_name": "Dr. K. Saroja, MD (Chief Clinical Pathologist)",
+      "signature_hash": "SHA256-KENVA-998E21",
+      "is_final": 1,
+      "created_at": "2026-10-09T11:37:16.635Z"
+    }
+  ],
+  "sample_workflow_timeline": [
+    {
+      "id": "TL-SMP-77412-STAGE-1",
+      "sample_id": "SMP-77412",
+      "stage_number": 1,
+      "stage_name": "Test Order Created",
+      "actor_name": "Dr. R. K. Prasad, MD",
+      "actor_role": "Physician",
+      "location": "Metro Care Diagnostic Center",
+      "timestamp": "2026-10-06T16:37:16.628Z",
+      "notes": "Stage 1 completed: Test Order Created"
+    },
+    {
+      "id": "TL-SMP-77412-STAGE-2",
+      "sample_id": "SMP-77412",
+      "stage_number": 2,
+      "stage_name": "Patient Registration Verified",
+      "actor_name": "Kalyan Varma",
+      "actor_role": "Patient",
+      "location": "Metro Care Diagnostic Center",
+      "timestamp": "2026-10-06T18:37:16.629Z",
+      "notes": "Stage 2 completed: Patient Registration Verified"
+    },
+    {
+      "id": "TL-SMP-77412-STAGE-3",
+      "sample_id": "SMP-77412",
+      "stage_number": 3,
+      "stage_name": "Sample Collection",
+      "actor_name": "Metro Care Phlebotomist",
+      "actor_role": "Phlebotomist",
+      "location": "Metro Care Diagnostic Center",
+      "timestamp": "2026-10-07T16:37:16.629Z",
+      "notes": "Stage 3 completed: Sample Collection"
+    },
+    {
+      "id": "TL-SMP-77412-STAGE-4",
+      "sample_id": "SMP-77412",
+      "stage_number": 4,
+      "stage_name": "Sample Registered in LIMS",
+      "actor_name": "Metro Care Staff",
+      "actor_role": "Specimen Tech",
+      "location": "Metro Care Diagnostic Center",
+      "timestamp": "2026-10-07T18:37:16.630Z",
+      "notes": "Stage 4 completed: Sample Registered in LIMS"
+    },
+    {
+      "id": "TL-SMP-77412-STAGE-5",
+      "sample_id": "SMP-77412",
+      "stage_number": 5,
+      "stage_name": "Logistics Pickup",
+      "actor_name": "Express Logistics Staff",
+      "actor_role": "ColdChain Courier",
+      "location": "Metro Care Diagnostic Center",
+      "timestamp": "2026-10-08T00:37:16.631Z",
+      "notes": "Stage 5 completed: Logistics Pickup"
+    },
+    {
+      "id": "TL-SMP-77412-STAGE-6",
+      "sample_id": "SMP-77412",
+      "stage_number": 6,
+      "stage_name": "In Transit",
+      "actor_name": "Kenva Logistics Dispatch",
+      "actor_role": "Logistics System",
+      "location": "Transit Hub Renigunta Road",
+      "timestamp": "2026-10-08T02:37:16.631Z",
+      "notes": "Stage 6 completed: In Transit"
+    },
+    {
+      "id": "TL-SMP-77412-STAGE-7",
+      "sample_id": "SMP-77412",
+      "stage_number": 7,
+      "stage_name": "Laboratory Received",
+      "actor_name": "Receiving Tech P. Vani",
+      "actor_role": "Lab Staff",
+      "location": "Kenva Central Ref Lab (Tirupati)",
+      "timestamp": "2026-10-08T05:37:16.632Z",
+      "notes": "Stage 7 completed: Laboratory Received"
+    },
+    {
+      "id": "TL-SMP-77412-STAGE-8",
+      "sample_id": "SMP-77412",
+      "stage_number": 8,
+      "stage_name": "Testing in Progress",
+      "actor_name": "Dr. K. Saroja, MD",
+      "actor_role": "Lead Pathologist",
+      "location": "Kenva Central Ref Lab (Tirupati)",
+      "timestamp": "2026-10-08T10:37:16.632Z",
+      "notes": "Stage 8 completed: Testing in Progress"
+    },
+    {
+      "id": "TL-SMP-77412-STAGE-9",
+      "sample_id": "SMP-77412",
+      "stage_number": 9,
+      "stage_name": "Testing Completed",
+      "actor_name": "Dr. K. Saroja, MD",
+      "actor_role": "Lead Pathologist",
+      "location": "Kenva Central Ref Lab (Tirupati)",
+      "timestamp": "2026-10-09T06:37:16.633Z",
+      "notes": "Stage 9 completed: Testing Completed"
+    },
+    {
+      "id": "TL-SMP-77412-STAGE-10",
+      "sample_id": "SMP-77412",
+      "stage_number": 10,
+      "stage_name": "Report Generated & Available",
+      "actor_name": "Kenva Automated LIMS",
+      "actor_role": "System",
+      "location": "Kenva Cloud Portal",
+      "timestamp": "2026-10-09T11:37:16.633Z",
+      "notes": "Stage 10 completed: Report Generated & Available"
+    },
+    {
+      "id": "TL-SMP-99120-STAGE-1",
+      "sample_id": "SMP-99120",
+      "stage_number": 1,
+      "stage_name": "Test Order Created",
+      "actor_name": "Dr. S. K. Ramesh, MD",
+      "actor_role": "Physician",
+      "location": "Metro Care Diagnostic Center",
+      "timestamp": "2026-10-08T16:37:16.637Z",
+      "notes": "Stage 1: Test Order Created"
+    },
+    {
+      "id": "TL-SMP-99120-STAGE-2",
+      "sample_id": "SMP-99120",
+      "stage_number": 2,
+      "stage_name": "Patient Registration Verified",
+      "actor_name": "Kalyan Varma",
+      "actor_role": "Patient",
+      "location": "Metro Care Diagnostic Center",
+      "timestamp": "2026-10-08T20:37:16.638Z",
+      "notes": "Stage 2: Patient Registration Verified"
+    },
+    {
+      "id": "TL-SMP-99120-STAGE-3",
+      "sample_id": "SMP-99120",
+      "stage_number": 3,
+      "stage_name": "Sample Collection",
+      "actor_name": "Metro Care Staff",
+      "actor_role": "Phlebotomist",
+      "location": "Metro Care Diagnostic Center",
+      "timestamp": "2026-10-09T04:37:16.639Z",
+      "notes": "Stage 3: Sample Collection"
+    },
+    {
+      "id": "TL-SMP-99120-STAGE-4",
+      "sample_id": "SMP-99120",
+      "stage_number": 4,
+      "stage_name": "Sample Registered in LIMS",
+      "actor_name": "Metro Care Staff",
+      "actor_role": "Specimen Tech",
+      "location": "Metro Care Diagnostic Center",
+      "timestamp": "2026-10-09T05:37:16.640Z",
+      "notes": "Stage 4: Sample Registered in LIMS"
+    },
+    {
+      "id": "TL-SMP-99120-STAGE-5",
+      "sample_id": "SMP-99120",
+      "stage_number": 5,
+      "stage_name": "Logistics Pickup",
+      "actor_name": "Express Logistics Staff",
+      "actor_role": "ColdChain Courier",
+      "location": "Metro Care Diagnostic Center",
+      "timestamp": "2026-10-09T08:37:16.641Z",
+      "notes": "Stage 5: Logistics Pickup"
+    },
+    {
+      "id": "TL-SMP-99120-STAGE-6",
+      "sample_id": "SMP-99120",
+      "stage_number": 6,
+      "stage_name": "In Transit",
+      "actor_name": "Kenva Logistics Dispatch",
+      "actor_role": "Logistics System",
+      "location": "En Route to Lab",
+      "timestamp": "2026-10-09T10:37:16.641Z",
+      "notes": "Stage 6: In Transit"
+    },
+    {
+      "id": "TL-SMP-99120-STAGE-7",
+      "sample_id": "SMP-99120",
+      "stage_number": 7,
+      "stage_name": "Laboratory Received",
+      "actor_name": "Receiving Tech P. Vani",
+      "actor_role": "Lab Staff",
+      "location": "Kenva Central Ref Lab (Tirupati)",
+      "timestamp": "2026-10-09T13:37:16.642Z",
+      "notes": "Stage 7: Laboratory Received"
+    },
+    {
+      "id": "TL-SMP-99120-STAGE-8",
+      "sample_id": "SMP-99120",
+      "stage_number": 8,
+      "stage_name": "Testing in Progress",
+      "actor_name": "Dr. K. Saroja, MD",
+      "actor_role": "Endocrinology Specialist",
+      "location": "Kenva Central Ref Lab (Tirupati)",
+      "timestamp": "2026-10-09T15:37:16.642Z",
+      "notes": "Stage 8: Testing in Progress"
+    }
+  ],
+  "notifications": [
+    {
+      "id": "NOTIF-1791563836644-7dk2",
+      "user_id": "USR-PAT-01",
+      "title": "Diagnostic Report Available",
+      "message": "Your report for Order #ORD-9021 is ready for viewing and download.",
+      "type": "REPORT_AVAILABLE",
+      "is_read": 0,
+      "created_at": "2026-10-09T16:37:16.644Z"
+    },
+    {
+      "id": "NOTIF-1791563836644-f08z",
+      "user_id": "USR-PAT-01",
+      "title": "Booking Access Code Redeemed",
+      "message": "Your code KEN-CODE-8921-X7 was verified. Full appointment scheduling is unlocked.",
+      "type": "BOOKING_CODE_REDEEMED",
+      "is_read": 0,
+      "created_at": "2026-10-09T16:37:16.644Z"
+    },
+    {
+      "id": "NOTIF-1791563836645-ik2p",
+      "user_id": "USR-PAT-02",
+      "title": "Account Registration Received",
+      "message": "Your registration is awaiting administrator approval. You will receive a booking access code after approval.",
+      "type": "ACCOUNT_REGISTRATION",
+      "is_read": 0,
+      "created_at": "2026-10-09T16:37:16.645Z"
+    }
+  ],
+  "audit_logs": [
+    {
+      "id": "AUD-1791563836646-lxd1",
+      "actor_id": "USR-ADMIN-01",
+      "actor_name": "Kenva Health Systems Admin",
+      "actor_role": "ADMIN",
+      "action": "INITIALIZE_SYSTEM_SEED",
+      "target_type": "SYSTEM",
+      "target_id": "KENVA_CORE",
+      "details": "Database initialized with clean clinical demonstration dataset.",
+      "timestamp": "2026-10-09T16:37:16.646Z"
+    }
+  ],
+  "email_config": {
+    "id": "primary",
+    "smtp_host": "",
+    "smtp_port": 587,
+    "smtp_user": "",
+    "smtp_pass": "",
+    "from_email": "",
+    "is_enabled": 0,
+    "last_updated": "2026-10-09T13:57:43.059Z"
+  }
+}
