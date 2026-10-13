@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { LogIn, UserCheck, Building2, ShieldCheck, Lock, Mail, AlertCircle, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import OtpVerificationModal from '../components/OtpVerificationModal';
 
 export default function LoginPage({ setActiveTab, onOpenDemoModal }) {
   const { login } = useAuth();
@@ -10,6 +11,9 @@ export default function LoginPage({ setActiveTab, onOpenDemoModal }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // OTP Step state
+  const [otpState, setOtpState] = useState(null); // { userId, maskedEmail, message }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,10 +26,18 @@ export default function LoginPage({ setActiveTab, onOpenDemoModal }) {
 
     setLoading(true);
     try {
-      const user = await login(identifier, password, activeRoleTab);
-      if (user.role === 'PATIENT') setActiveTab('patient-dashboard');
-      else if (user.role === 'HOSPITAL') setActiveTab('hospital-dashboard');
-      else if (user.role === 'ADMIN') setActiveTab('admin-dashboard');
+      // Step 1: validate credentials → backend sends OTP
+      const data = await login(identifier, password, activeRoleTab);
+      if (data.otpSent) {
+        // Move to Step 2 OTP screen
+        setOtpState({ userId: data.userId, maskedEmail: data.maskedEmail, message: data.message });
+      } else {
+        // Fallback: if SMTP not configured the backend may still return user directly (demo mode)
+        const user = data;
+        if (user.role === 'PATIENT') setActiveTab('patient-dashboard');
+        else if (user.role === 'HOSPITAL') setActiveTab('hospital-dashboard');
+        else if (user.role === 'ADMIN') setActiveTab('admin-dashboard');
+      }
     } catch (err) {
       setError(err.message || 'Invalid login credentials.');
     } finally {
@@ -38,7 +50,19 @@ export default function LoginPage({ setActiveTab, onOpenDemoModal }) {
     setError('');
     setIdentifier('');
     setPassword('');
+    setOtpState(null);
   };
+
+  // If OTP step active, render OTP screen
+  if (otpState) {
+    return (
+      <OtpVerificationModal
+        otpState={otpState}
+        setActiveTab={setActiveTab}
+        onBack={() => setOtpState(null)}
+      />
+    );
+  }
 
   return (
     <div className="max-w-md mx-auto py-12 px-4 animate-fadeIn">
@@ -153,6 +177,12 @@ export default function LoginPage({ setActiveTab, onOpenDemoModal }) {
             </div>
           </div>
 
+          {/* OTP notice */}
+          <p className="text-[11px] text-slate-500 flex items-center gap-1.5">
+            <Mail className="w-3.5 h-3.5 text-teal-500" />
+            A 6-digit verification code will be sent to your registered email after password check.
+          </p>
+
           <button
             type="submit"
             disabled={loading}
@@ -164,7 +194,7 @@ export default function LoginPage({ setActiveTab, onOpenDemoModal }) {
                   : 'bg-purple-500 text-slate-950 hover:bg-purple-400'
             }`}
           >
-            {loading ? 'Authenticating...' : `Log In to ${activeRoleTab === 'PATIENT' ? 'Patient' : activeRoleTab === 'HOSPITAL' ? 'Hospital Staff' : 'Admin'} Portal`}
+            {loading ? 'Sending OTP...' : `Continue to Email Verification`}
           </button>
 
         </form>

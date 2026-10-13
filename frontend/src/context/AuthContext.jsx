@@ -26,6 +26,10 @@ export const AuthProvider = ({ children }) => {
     }
   }, [user]);
 
+  /**
+   * STEP 1: Validate credentials → sends OTP to email
+   * Returns { otpSent: true, userId, maskedEmail, message }
+   */
   const login = async (identifier, password, expectedRole) => {
     setLoading(true);
     try {
@@ -35,15 +39,47 @@ export const AuthProvider = ({ children }) => {
         body: JSON.stringify({ identifier, password, expectedRole })
       });
       const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Login failed');
-      }
+      if (!res.ok) throw new Error(data.error || 'Login failed');
+      // Returns { otpSent, userId, maskedEmail, message } — NOT the token yet
+      return data;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * STEP 2: Submit OTP → receives JWT + user profile
+   */
+  const verifyOtp = async (userId, otp) => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, otp })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'OTP verification failed');
       setToken(data.token);
       setUser(data.user);
       return data.user;
     } finally {
       setLoading(false);
     }
+  };
+
+  /**
+   * Resend a fresh OTP to the user's email
+   */
+  const resendOtp = async (userId) => {
+    const res = await fetch('/api/auth/resend-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Resend failed');
+    return data;
   };
 
   const registerPatient = async (formData) => {
@@ -55,9 +91,7 @@ export const AuthProvider = ({ children }) => {
         body: JSON.stringify(formData)
       });
       const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Registration failed');
-      }
+      if (!res.ok) throw new Error(data.error || 'Registration failed');
       return data;
     } finally {
       setLoading(false);
@@ -87,7 +121,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, registerPatient, logout, refreshUser, setUser }}>
+    <AuthContext.Provider value={{ user, token, loading, login, verifyOtp, resendOtp, registerPatient, logout, refreshUser, setUser }}>
       {children}
     </AuthContext.Provider>
   );

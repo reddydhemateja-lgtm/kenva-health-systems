@@ -19,6 +19,7 @@ const defaultData = {
   sample_workflow_timeline: [],
   notifications: [],
   audit_logs: [],
+  login_otps: [],
   email_config: {
     id: 'primary',
     smtp_host: '',

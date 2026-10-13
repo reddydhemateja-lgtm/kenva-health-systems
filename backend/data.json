@@ -35,6 +35,15 @@
       "name": "Ananya Rao",
       "phone": "+91 91234 56789",
       "created_at": "2026-10-09T16:37:16.371Z"
+    },
+    {
+      "id": "USR-1791906075827-68vd",
+      "email": "nanireddyd144@gmial.com",
+      "password": "$2a$10$qtftAm/1nP2UCnt/NRN5Be3kPMEkSLGXhXq1ZozeuJL73cydiK69u",
+      "role": "PATIENT",
+      "name": "nani",
+      "phone": "9652314695",
+      "created_at": "2026-10-13T15:41:15.828Z"
     }
   ],
   "patient_profiles": [
@@ -53,6 +62,16 @@
       "user_id": "USR-PAT-02",
       "dob": "1997-09-20",
       "city": "Tirupati",
+      "approval_status": "APPROVED",
+      "booking_permission": 0,
+      "approved_at": "2026-10-13T15:42:05.413Z",
+      "rejection_reason": null
+    },
+    {
+      "patient_id": "KEN-P-1003",
+      "user_id": "USR-1791906075827-68vd",
+      "dob": "2006-02-01",
+      "city": "tirupati",
       "approval_status": "PENDING_APPROVAL",
       "booking_permission": 0,
       "approved_at": null,
@@ -113,6 +132,16 @@
       "redeemed_at": "2026-10-09T16:37:16.371Z",
       "expires_at": "2026-11-08T16:37:16.618Z",
       "created_at": "2026-10-09T16:37:16.371Z"
+    },
+    {
+      "id": "BC-1791906125415-qhbz",
+      "code": "KEN-CODE-EDBD-6428",
+      "patient_id": "KEN-P-1002",
+      "generated_by": "USR-ADMIN-01",
+      "is_redeemed": 0,
+      "redeemed_at": null,
+      "expires_at": "2026-11-12T15:42:05.413Z",
+      "created_at": "2026-10-13T15:42:05.413Z"
     }
   ],
   "appointments": [
@@ -466,6 +495,24 @@
       "type": "ACCOUNT_REGISTRATION",
       "is_read": 0,
       "created_at": "2026-10-09T16:37:16.645Z"
+    },
+    {
+      "id": "NOTIF-1791906075843-bemv",
+      "user_id": "USR-1791906075827-68vd",
+      "title": "Kenva Health Systems — Registration Received",
+      "message": "Hello nani,\n\nYour registration with Kenva Health Systems is complete! Your assigned Patient ID is KEN-P-1003.\nYour account is currently awaiting administrator approval. Once approved, you will receive a booking access code in your portal to unlock appointment scheduling.\n\nThank you for choosing Kenva.",
+      "type": "ACCOUNT_REGISTRATION",
+      "is_read": 0,
+      "created_at": "2026-10-13T15:41:15.843Z"
+    },
+    {
+      "id": "NOTIF-1791906125532-pazb",
+      "user_id": "USR-PAT-02",
+      "title": "Kenva Health Systems — Account Approved & Booking Access Code",
+      "message": "Hello Ananya Rao,\n\nGreat news! Your Kenva Health Systems account (KEN-P-1002) has been approved by our administration.\n\nYour Unique Booking Access Code is: KEN-CODE-EDBD-6428\nExpires: 12/11/2026\n\nPlease log in to your patient portal and enter this code under \"Unlock Appointment Booking\" to enable appointment requests.\n\nThank you,\nKenva Health Systems",
+      "type": "BOOKING_CODE_ISSUED",
+      "is_read": 0,
+      "created_at": "2026-10-13T15:42:05.532Z"
     }
   ],
   "audit_logs": [
@@ -479,6 +526,50 @@
       "target_id": "KENVA_CORE",
       "details": "Database initialized with clean clinical demonstration dataset.",
       "timestamp": "2026-10-09T16:37:16.646Z"
+    },
+    {
+      "id": "AUD-1791906075836-l1o4",
+      "actor_id": "USR-1791906075827-68vd",
+      "actor_name": "nani",
+      "actor_role": "PATIENT",
+      "action": "PATIENT_REGISTERED",
+      "target_type": "PATIENT_PROFILE",
+      "target_id": "KEN-P-1003",
+      "details": "{\"email\":\"nanireddyd144@gmial.com\",\"city\":\"tirupati\",\"patientId\":\"KEN-P-1003\"}",
+      "timestamp": "2026-10-13T15:41:15.836Z"
+    },
+    {
+      "id": "AUD-1791906107392-5db2",
+      "actor_id": "USR-PAT-02",
+      "actor_name": "Ananya Rao",
+      "actor_role": "PATIENT",
+      "action": "USER_LOGIN",
+      "target_type": "USER",
+      "target_id": "USR-PAT-02",
+      "details": "{\"role\":\"PATIENT\"}",
+      "timestamp": "2026-10-13T15:41:47.392Z"
+    },
+    {
+      "id": "AUD-1791906118685-96by",
+      "actor_id": "USR-ADMIN-01",
+      "actor_name": "Kenva Health Systems Admin",
+      "actor_role": "ADMIN",
+      "action": "USER_LOGIN",
+      "target_type": "USER",
+      "target_id": "USR-ADMIN-01",
+      "details": "{\"role\":\"ADMIN\"}",
+      "timestamp": "2026-10-13T15:41:58.685Z"
+    },
+    {
+      "id": "AUD-1791906125417-ec64",
+      "actor_id": "USR-ADMIN-01",
+      "actor_name": "Kenva Health Systems Admin",
+      "actor_role": "ADMIN",
+      "action": "APPROVE_PATIENT_ACCOUNT",
+      "target_type": "PATIENT_PROFILE",
+      "target_id": "KEN-P-1002",
+      "details": "{\"bookingCode\":\"KEN-CODE-EDBD-6428\",\"expiresAt\":\"2026-11-12T15:42:05.413Z\"}",
+      "timestamp": "2026-10-13T15:42:05.417Z"
     }
   ],
   "email_config": {
