@@ -19,7 +19,7 @@ async function seedData() {
 
   const now = new Date().toISOString();
   const passHash = await bcrypt.hash('Password123!', 10);
-  const adminPassHash = await bcrypt.hash('AdminPassword123!', 10);
+  const adminPassHash = await bcrypt.hash('nanireddykenva', 10);
 
   // 1. Hospital Facilities near Tirupati
   const hospital1 = {
@@ -66,7 +66,7 @@ async function seedData() {
   // Admin User: Kenva Health Systems Admin
   const adminUser = {
     id: 'USR-ADMIN-01',
-    email: 'admin@kenva.local',
+    email: 'reddydhemateja@gmail.com',
     password: adminPassHash,
     role: 'ADMIN',
     name: 'Kenva Health Systems Admin',
@@ -391,7 +391,7 @@ async function seedData() {
   console.log('1. Patient (Approved): patient@kenva.local / Password123! (Name: Kalyan Varma, ID: KEN-P-1001)');
   console.log('2. Patient (Pending Approval): pending.patient@kenva.local / Password123! (Name: Ananya Rao, ID: KEN-P-1002)');
   console.log('3. Hospital Staff: hospital@kenva.local / Password123! (Name: Metro Care Hospital Staff)');
-  console.log('4. Administrator: admin@kenva.local / AdminPassword123! (Name: Kenva Health Systems Admin)');
+  console.log('4. Administrator: reddydhemateja@gmail.com / nanireddykenva (Name: Kenva Health Systems Admin)');
 }
 
 seedData().catch(console.error);

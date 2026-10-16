@@ -26,17 +26,16 @@ export default function LoginPage({ setActiveTab, onOpenDemoModal }) {
 
     setLoading(true);
     try {
-      // Step 1: validate credentials → backend sends OTP
       const data = await login(identifier, password, activeRoleTab);
-      if (data.otpSent) {
-        // Move to Step 2 OTP screen
+
+      if (!data.otpSent && data.user) {
+        // ADMIN / HOSPITAL — direct login, token already stored in AuthContext
+        const { role } = data.user;
+        if (role === 'ADMIN') setActiveTab('admin-dashboard');
+        else if (role === 'HOSPITAL') setActiveTab('hospital-dashboard');
+      } else if (data.otpSent) {
+        // PATIENT — move to OTP verification screen
         setOtpState({ userId: data.userId, maskedEmail: data.maskedEmail, message: data.message });
-      } else {
-        // Fallback: if SMTP not configured the backend may still return user directly (demo mode)
-        const user = data;
-        if (user.role === 'PATIENT') setActiveTab('patient-dashboard');
-        else if (user.role === 'HOSPITAL') setActiveTab('hospital-dashboard');
-        else if (user.role === 'ADMIN') setActiveTab('admin-dashboard');
       }
     } catch (err) {
       setError(err.message || 'Invalid login credentials.');
@@ -177,11 +176,13 @@ export default function LoginPage({ setActiveTab, onOpenDemoModal }) {
             </div>
           </div>
 
-          {/* OTP notice */}
-          <p className="text-[11px] text-slate-500 flex items-center gap-1.5">
-            <Mail className="w-3.5 h-3.5 text-teal-500" />
-            A 6-digit verification code will be sent to your registered email after password check.
-          </p>
+          {/* OTP notice — patients only */}
+          {activeRoleTab === 'PATIENT' && (
+            <p className="text-[11px] text-slate-500 flex items-center gap-1.5">
+              <Mail className="w-3.5 h-3.5 text-teal-500" />
+              A 6-digit verification code will be sent to your registered email after password check.
+            </p>
+          )}
 
           <button
             type="submit"
@@ -194,7 +195,7 @@ export default function LoginPage({ setActiveTab, onOpenDemoModal }) {
                   : 'bg-purple-500 text-slate-950 hover:bg-purple-400'
             }`}
           >
-            {loading ? 'Sending OTP...' : `Continue to Email Verification`}
+            {loading ? 'Signing in...' : activeRoleTab === 'PATIENT' ? 'Continue to Email Verification' : 'Sign In'}
           </button>
 
         </form>

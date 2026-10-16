@@ -148,9 +148,9 @@ function resolveUser(cleanId) {
 }
 
 /**
- * POST /api/auth/login  — STEP 1
- * Verify credentials → generate OTP → send to email
- * Returns { otpSent: true, email, maskedEmail } on success (NO token yet)
+ * POST /api/auth/login
+ * - ADMIN / HOSPITAL: direct JWT on valid credentials (no OTP)
+ * - PATIENT: OTP emailed, must verify via /verify-otp
  */
 router.post('/login', async (req, res) => {
   try {
@@ -169,31 +169,62 @@ router.post('/login', async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(401).json({ error: 'Invalid login credentials.' });
 
-    // Generate OTP — 6 digits, expires in 10 minutes
+    // ── ADMIN & HOSPITAL: direct JWT — no OTP required ──────────────────
+    if (user.role === 'ADMIN' || user.role === 'HOSPITAL') {
+      let hospitalStaffInfo = null;
+      let hospitalInfo = null;
+      if (user.role === 'HOSPITAL') {
+        hospitalStaffInfo = db.findOne('hospital_staff', s => s.user_id === user.id);
+        if (hospitalStaffInfo) hospitalInfo = db.findOne('hospitals', h => h.id === hospitalStaffInfo.hospital_id);
+      }
+      const payload = {
+        id: user.id, email: user.email, name: user.name, role: user.role,
+        patientId: null,
+        hospitalId: hospitalStaffInfo ? hospitalStaffInfo.hospital_id : null,
+        hospitalName: hospitalInfo ? hospitalInfo.name : null
+      };
+      const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '24h' });
+      db.logAudit({
+        actor_id: user.id, actor_name: user.name, actor_role: user.role,
+        action: 'USER_LOGIN_DIRECT', target_type: 'USER', target_id: user.id,
+        details: { role: user.role }
+      });
+      return res.json({
+        otpSent: false,
+        token,
+        user: {
+          id: user.id, name: user.name, email: user.email, role: user.role,
+          patientProfile: null,
+          hospitalStaff: hospitalStaffInfo ? {
+            hospital_id: hospitalStaffInfo.hospital_id,
+            hospital_name: hospitalInfo ? hospitalInfo.name : '',
+            department: hospitalStaffInfo.department,
+            role_title: hospitalStaffInfo.role_title
+          } : null
+        }
+      });
+    }
+
+    // ── PATIENT: OTP via email ────────────────────────────────────────────
     const otp = generateOtp();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
     const otpId = 'OTP-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4);
 
-    // Invalidate any previous unused OTP for this user
     db.delete('login_otps', o => o.user_id === user.id);
-
-    // Store OTP
     db.insert('login_otps', {
       id: otpId,
       user_id: user.id,
-      otp_hash: otp,          // In production, hash this; plain for demo simplicity
+      otp_hash: otp,
       expires_at: expiresAt,
       used: false,
       role: user.role,
       expected_role: expectedRole || null
     });
 
-    // Mask email for display: d*****@gmail.com
     const parts = user.email.split('@');
     const maskedEmail = parts[0][0] + '*'.repeat(Math.max(parts[0].length - 1, 4)) + '@' + parts[1];
 
-    // Send OTP email
-    await sendNotificationEmail({
+    const emailResult = await sendNotificationEmail({
       to: user.email,
       subject: 'Kenva Health Systems — Your Login OTP',
       plainText: `Hello ${user.name},\n\nYour one-time login code is: ${otp}\n\nThis code expires in 10 minutes. Do not share it with anyone.\n\n— Kenva Health Systems`,
@@ -214,6 +245,15 @@ router.post('/login', async (req, res) => {
       userId: user.id,
       type: 'LOGIN_OTP'
     });
+
+    const smtpConfigured = emailResult && emailResult.sent;
+    console.log(`[AUTH] Patient OTP for ${user.email}: ${otp} (SMTP sent: ${smtpConfigured})`);
+
+    if (!smtpConfigured) {
+      return res.status(503).json({
+        error: 'Email service is not configured. Please ask your administrator to set up SMTP in Admin Dashboard → Email Settings so your OTP can be delivered.'
+      });
+    }
 
     return res.json({
       otpSent: true,

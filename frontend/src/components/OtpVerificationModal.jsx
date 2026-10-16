@@ -20,6 +20,13 @@ export default function OtpVerificationModal({ otpState, onSuccess, onBack, setA
   const [resending, setResending] = useState(false);
   const inputs = useRef([]);
 
+  // Auto-fill if demo OTP is provided (no SMTP configured)
+  useEffect(() => {
+    if (otpState.demoOtp && otpState.demoOtp.length === 6) {
+      setDigits(otpState.demoOtp.split(''));
+    }
+  }, [otpState.demoOtp]);
+
   // Countdown for resend button
   useEffect(() => {
     if (resendCooldown <= 0) return;
@@ -119,6 +126,17 @@ export default function OtpVerificationModal({ otpState, onSuccess, onBack, setA
           </p>
           <p className="text-teal-400 font-semibold text-sm mt-1">{otpState.maskedEmail}</p>
         </div>
+
+        {/* Demo OTP Banner (when SMTP not configured) */}
+        {otpState.demoOtp && (
+          <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/40 text-center">
+            <p className="text-amber-400 text-xs font-semibold mb-2 uppercase tracking-wider">⚠ Demo Mode — Email Not Configured</p>
+            <p className="text-slate-300 text-xs mb-3">Your one-time login code is (auto-filled below):</p>
+            <div className="inline-block bg-slate-950 border-2 border-amber-400/60 rounded-xl px-6 py-3">
+              <span className="text-3xl font-mono font-bold tracking-[0.4em] text-amber-300">{otpState.demoOtp}</span>
+            </div>
+          </div>
+        )}
 
         {/* OTP Input Boxes */}
         <div className="flex justify-center gap-3 mb-6" onPaste={handlePaste}>

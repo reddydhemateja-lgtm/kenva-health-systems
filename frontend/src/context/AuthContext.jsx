@@ -40,7 +40,12 @@ export const AuthProvider = ({ children }) => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Login failed');
-      // Returns { otpSent, userId, maskedEmail, message } — NOT the token yet
+      // ADMIN/HOSPITAL: direct login — store token immediately
+      if (!data.otpSent && data.token) {
+        setToken(data.token);
+        setUser(data.user);
+      }
+      // PATIENT: otpSent:true — caller handles OTP step
       return data;
     } finally {
       setLoading(false);

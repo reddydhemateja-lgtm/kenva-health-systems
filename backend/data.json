@@ -2,48 +2,48 @@
   "users": [
     {
       "id": "USR-ADMIN-01",
-      "email": "admin@kenva.local",
-      "password": "$2a$10$qk50USWHOfiWTep1Y6FqNudPgnbAvKxxUQUs8dP4SBbe8kLiGzOnm",
+      "email": "reddydhemateja@gmail.com",
+      "password": "$2a$10$fE0GfYAM7RkmbaGFRcZJ3OrXFMcTaAAOR2Vw5LtGfcHZJ9R48EsQC",
       "role": "ADMIN",
       "name": "Kenva Health Systems Admin",
       "phone": "+91 94400 11223",
-      "created_at": "2026-10-09T16:37:16.371Z"
+      "created_at": "2026-10-14T04:57:58.045Z"
     },
     {
       "id": "USR-STAFF-01",
       "email": "hospital@kenva.local",
-      "password": "$2a$10$GIKuksVmWn3iX4MstYxR8OpkJR7hlup3s72hZI78D4/2h53AF2j1W",
+      "password": "$2a$10$FbQPGxl17mSTJVd4k8X9iOkxPVqqiauAIszveR.1Sak8ixgu7haMK",
       "role": "HOSPITAL",
       "name": "Metro Care Hospital Staff",
       "phone": "+91 98480 22334",
-      "created_at": "2026-10-09T16:37:16.371Z"
+      "created_at": "2026-10-14T04:57:58.045Z"
     },
     {
       "id": "USR-PAT-01",
       "email": "patient@kenva.local",
-      "password": "$2a$10$GIKuksVmWn3iX4MstYxR8OpkJR7hlup3s72hZI78D4/2h53AF2j1W",
+      "password": "$2a$10$FbQPGxl17mSTJVd4k8X9iOkxPVqqiauAIszveR.1Sak8ixgu7haMK",
       "role": "PATIENT",
       "name": "Kalyan Varma",
       "phone": "+91 98765 43210",
-      "created_at": "2026-10-09T16:37:16.371Z"
+      "created_at": "2026-10-14T04:57:58.045Z"
     },
     {
       "id": "USR-PAT-02",
       "email": "pending.patient@kenva.local",
-      "password": "$2a$10$GIKuksVmWn3iX4MstYxR8OpkJR7hlup3s72hZI78D4/2h53AF2j1W",
+      "password": "$2a$10$FbQPGxl17mSTJVd4k8X9iOkxPVqqiauAIszveR.1Sak8ixgu7haMK",
       "role": "PATIENT",
       "name": "Ananya Rao",
       "phone": "+91 91234 56789",
-      "created_at": "2026-10-09T16:37:16.371Z"
+      "created_at": "2026-10-14T04:57:58.045Z"
     },
     {
-      "id": "USR-1791906075827-68vd",
-      "email": "nanireddyd144@gmial.com",
-      "password": "$2a$10$qtftAm/1nP2UCnt/NRN5Be3kPMEkSLGXhXq1ZozeuJL73cydiK69u",
+      "id": "USR-1791957365397-a9cy",
+      "email": "dhematejareddy@gmail.com",
+      "password": "$2a$10$177sN1F2BTClCpuGEkbqJeCDDVDSBevXTiFrCDJMeLd7G6pwxyr5W",
       "role": "PATIENT",
-      "name": "nani",
+      "name": "D hemateja Reddy",
       "phone": "9652314695",
-      "created_at": "2026-10-13T15:41:15.828Z"
+      "created_at": "2026-10-14T05:56:05.397Z"
     }
   ],
   "patient_profiles": [
@@ -54,7 +54,7 @@
       "city": "Tirupati",
       "approval_status": "APPROVED",
       "booking_permission": 1,
-      "approved_at": "2026-10-09T16:37:16.371Z",
+      "approved_at": "2026-10-14T04:57:58.045Z",
       "rejection_reason": null
     },
     {
@@ -62,14 +62,14 @@
       "user_id": "USR-PAT-02",
       "dob": "1997-09-20",
       "city": "Tirupati",
-      "approval_status": "APPROVED",
+      "approval_status": "PENDING_APPROVAL",
       "booking_permission": 0,
-      "approved_at": "2026-10-13T15:42:05.413Z",
+      "approved_at": null,
       "rejection_reason": null
     },
     {
       "patient_id": "KEN-P-1003",
-      "user_id": "USR-1791906075827-68vd",
+      "user_id": "USR-1791957365397-a9cy",
       "dob": "2006-02-01",
       "city": "tirupati",
       "approval_status": "PENDING_APPROVAL",
@@ -129,19 +129,9 @@
       "patient_id": "KEN-P-1001",
       "generated_by": "USR-ADMIN-01",
       "is_redeemed": 1,
-      "redeemed_at": "2026-10-09T16:37:16.371Z",
-      "expires_at": "2026-11-08T16:37:16.618Z",
-      "created_at": "2026-10-09T16:37:16.371Z"
-    },
-    {
-      "id": "BC-1791906125415-qhbz",
-      "code": "KEN-CODE-EDBD-6428",
-      "patient_id": "KEN-P-1002",
-      "generated_by": "USR-ADMIN-01",
-      "is_redeemed": 0,
-      "redeemed_at": null,
-      "expires_at": "2026-11-12T15:42:05.413Z",
-      "created_at": "2026-10-13T15:42:05.413Z"
+      "redeemed_at": "2026-10-14T04:57:58.045Z",
+      "expires_at": "2026-11-13T04:57:58.170Z",
+      "created_at": "2026-10-14T04:57:58.045Z"
     }
   ],
   "appointments": [
@@ -155,8 +145,8 @@
       "symptoms": "Routine health checkup.",
       "status": "CONFIRMED",
       "notes": "Fast 10-12 hours prior to venous blood draw.",
-      "created_at": "2026-10-09T16:37:16.371Z",
-      "updated_at": "2026-10-09T16:37:16.371Z"
+      "created_at": "2026-10-14T04:57:58.045Z",
+      "updated_at": "2026-10-14T04:57:58.045Z"
     },
     {
       "appointment_id": "APT-2026-9044",
@@ -168,8 +158,8 @@
       "symptoms": "Mild seasonal symptoms.",
       "status": "PENDING_CONFIRMATION",
       "notes": "Awaiting scheduling confirmation from hospital intake.",
-      "created_at": "2026-10-09T16:37:16.371Z",
-      "updated_at": "2026-10-09T16:37:16.371Z"
+      "created_at": "2026-10-14T04:57:58.045Z",
+      "updated_at": "2026-10-14T04:57:58.045Z"
     }
   ],
   "test_orders": [
@@ -183,7 +173,7 @@
       "urgency": "ROUTINE",
       "status": "REPORT_AVAILABLE",
       "notes": "Standard diagnostic wellness panel.",
-      "created_at": "2026-10-06T16:37:16.623Z"
+      "created_at": "2026-10-11T04:57:58.172Z"
     },
     {
       "order_id": "ORD-9088",
@@ -195,7 +185,7 @@
       "urgency": "URGENT",
       "status": "TESTING_IN_PROGRESS",
       "notes": "Targeted endocrinology screen.",
-      "created_at": "2026-10-08T16:37:16.623Z"
+      "created_at": "2026-10-13T04:57:58.172Z"
     }
   ],
   "samples": [
@@ -206,11 +196,11 @@
       "hospital_id": "HOSP-101",
       "sample_type": "Venous Whole Blood & Serum",
       "container_id": "CONT-RED-88201",
-      "collected_at": "2026-10-07T16:37:16.625Z",
+      "collected_at": "2026-10-12T04:57:58.173Z",
       "collected_by": "Metro Care Phlebotomist",
       "current_workflow_stage": 10,
       "status_label": "Report Available",
-      "created_at": "2026-10-07T16:37:16.625Z"
+      "created_at": "2026-10-12T04:57:58.173Z"
     },
     {
       "sample_id": "SMP-99120",
@@ -219,11 +209,11 @@
       "hospital_id": "HOSP-101",
       "sample_type": "Plasma & Serum",
       "container_id": "CONT-GOLD-44109",
-      "collected_at": "2026-10-09T04:37:16.636Z",
+      "collected_at": "2026-10-13T16:57:58.179Z",
       "collected_by": "Metro Care Staff",
       "current_workflow_stage": 8,
       "status_label": "Testing in Progress",
-      "created_at": "2026-10-09T04:37:16.636Z"
+      "created_at": "2026-10-13T16:57:58.179Z"
     }
   ],
   "logistics_events": [
@@ -232,12 +222,12 @@
       "sample_id": "SMP-77412",
       "courier_name": "Kenva ColdChain Logistics (Tirupati Hub)",
       "tracking_number": "TRACK-KVA-981244",
-      "pickup_time": "2026-10-08T00:37:16.626Z",
+      "pickup_time": "2026-10-12T12:57:58.174Z",
       "origin_facility": "Metro Care Diagnostic Center",
       "destination_lab": "Kenva Central Reference Laboratory #1 (Tirupati)",
       "temperature_celsius": 3.8,
       "current_status": "DELIVERED",
-      "updated_at": "2026-10-08T04:37:16.626Z"
+      "updated_at": "2026-10-12T16:57:58.174Z"
     }
   ],
   "laboratory_records": [
@@ -246,9 +236,9 @@
       "sample_id": "SMP-77412",
       "lab_name": "Kenva Central Reference Laboratory #1 (Tirupati)",
       "technician_name": "Dr. K. Saroja, MD (Chief Pathologist)",
-      "received_at": "2026-10-08T05:37:16.627Z",
-      "testing_started_at": "2026-10-08T10:37:16.627Z",
-      "testing_completed_at": "2026-10-09T06:37:16.627Z",
+      "received_at": "2026-10-12T17:57:58.174Z",
+      "testing_started_at": "2026-10-12T22:57:58.174Z",
+      "testing_completed_at": "2026-10-13T18:57:58.174Z",
       "test_results_json": "[{\"parameter\":\"Fasting Plasma Glucose\",\"value\":\"94 mg/dL\",\"reference\":\"70 - 99 mg/dL\",\"status\":\"NORMAL\"},{\"parameter\":\"HbA1c\",\"value\":\"5.4 %\",\"reference\":\"< 5.7 %\",\"status\":\"OPTIMAL\"},{\"parameter\":\"Serum Creatinine\",\"value\":\"0.9 mg/dL\",\"reference\":\"0.6 - 1.2 mg/dL\",\"status\":\"NORMAL\"},{\"parameter\":\"Total Cholesterol\",\"value\":\"182 mg/dL\",\"reference\":\"< 200 mg/dL\",\"status\":\"NORMAL\"},{\"parameter\":\"Triglycerides\",\"value\":\"115 mg/dL\",\"reference\":\"< 150 mg/dL\",\"status\":\"NORMAL\"},{\"parameter\":\"HDL Cholesterol\",\"value\":\"55 mg/dL\",\"reference\":\"> 40 mg/dL\",\"status\":\"OPTIMAL\"},{\"parameter\":\"LDL Cholesterol\",\"value\":\"104 mg/dL\",\"reference\":\"< 100 mg/dL\",\"status\":\"SLIGHTLY_ELEVATED\"}]",
       "lab_notes": "Specimen cold chain maintained at 3.8°C throughout transit from MR Palli center. All quality calibration benchmarks satisfied."
     }
@@ -265,7 +255,7 @@
       "pathologist_name": "Dr. K. Saroja, MD (Chief Clinical Pathologist)",
       "signature_hash": "SHA256-KENVA-998E21",
       "is_final": 1,
-      "created_at": "2026-10-09T11:37:16.635Z"
+      "created_at": "2026-10-13T23:57:58.178Z"
     }
   ],
   "sample_workflow_timeline": [
@@ -277,7 +267,7 @@
       "actor_name": "Dr. R. K. Prasad, MD",
       "actor_role": "Physician",
       "location": "Metro Care Diagnostic Center",
-      "timestamp": "2026-10-06T16:37:16.628Z",
+      "timestamp": "2026-10-11T04:57:58.175Z",
       "notes": "Stage 1 completed: Test Order Created"
     },
     {
@@ -288,7 +278,7 @@
       "actor_name": "Kalyan Varma",
       "actor_role": "Patient",
       "location": "Metro Care Diagnostic Center",
-      "timestamp": "2026-10-06T18:37:16.629Z",
+      "timestamp": "2026-10-11T06:57:58.175Z",
       "notes": "Stage 2 completed: Patient Registration Verified"
     },
     {
@@ -299,7 +289,7 @@
       "actor_name": "Metro Care Phlebotomist",
       "actor_role": "Phlebotomist",
       "location": "Metro Care Diagnostic Center",
-      "timestamp": "2026-10-07T16:37:16.629Z",
+      "timestamp": "2026-10-12T04:57:58.176Z",
       "notes": "Stage 3 completed: Sample Collection"
     },
     {
@@ -310,7 +300,7 @@
       "actor_name": "Metro Care Staff",
       "actor_role": "Specimen Tech",
       "location": "Metro Care Diagnostic Center",
-      "timestamp": "2026-10-07T18:37:16.630Z",
+      "timestamp": "2026-10-12T06:57:58.176Z",
       "notes": "Stage 4 completed: Sample Registered in LIMS"
     },
     {
@@ -321,7 +311,7 @@
       "actor_name": "Express Logistics Staff",
       "actor_role": "ColdChain Courier",
       "location": "Metro Care Diagnostic Center",
-      "timestamp": "2026-10-08T00:37:16.631Z",
+      "timestamp": "2026-10-12T12:57:58.177Z",
       "notes": "Stage 5 completed: Logistics Pickup"
     },
     {
@@ -332,7 +322,7 @@
       "actor_name": "Kenva Logistics Dispatch",
       "actor_role": "Logistics System",
       "location": "Transit Hub Renigunta Road",
-      "timestamp": "2026-10-08T02:37:16.631Z",
+      "timestamp": "2026-10-12T14:57:58.177Z",
       "notes": "Stage 6 completed: In Transit"
     },
     {
@@ -343,7 +333,7 @@
       "actor_name": "Receiving Tech P. Vani",
       "actor_role": "Lab Staff",
       "location": "Kenva Central Ref Lab (Tirupati)",
-      "timestamp": "2026-10-08T05:37:16.632Z",
+      "timestamp": "2026-10-12T17:57:58.177Z",
       "notes": "Stage 7 completed: Laboratory Received"
     },
     {
@@ -354,7 +344,7 @@
       "actor_name": "Dr. K. Saroja, MD",
       "actor_role": "Lead Pathologist",
       "location": "Kenva Central Ref Lab (Tirupati)",
-      "timestamp": "2026-10-08T10:37:16.632Z",
+      "timestamp": "2026-10-12T22:57:58.178Z",
       "notes": "Stage 8 completed: Testing in Progress"
     },
     {
@@ -365,7 +355,7 @@
       "actor_name": "Dr. K. Saroja, MD",
       "actor_role": "Lead Pathologist",
       "location": "Kenva Central Ref Lab (Tirupati)",
-      "timestamp": "2026-10-09T06:37:16.633Z",
+      "timestamp": "2026-10-13T18:57:58.178Z",
       "notes": "Stage 9 completed: Testing Completed"
     },
     {
@@ -376,7 +366,7 @@
       "actor_name": "Kenva Automated LIMS",
       "actor_role": "System",
       "location": "Kenva Cloud Portal",
-      "timestamp": "2026-10-09T11:37:16.633Z",
+      "timestamp": "2026-10-13T23:57:58.178Z",
       "notes": "Stage 10 completed: Report Generated & Available"
     },
     {
@@ -387,7 +377,7 @@
       "actor_name": "Dr. S. K. Ramesh, MD",
       "actor_role": "Physician",
       "location": "Metro Care Diagnostic Center",
-      "timestamp": "2026-10-08T16:37:16.637Z",
+      "timestamp": "2026-10-13T04:57:58.179Z",
       "notes": "Stage 1: Test Order Created"
     },
     {
@@ -398,7 +388,7 @@
       "actor_name": "Kalyan Varma",
       "actor_role": "Patient",
       "location": "Metro Care Diagnostic Center",
-      "timestamp": "2026-10-08T20:37:16.638Z",
+      "timestamp": "2026-10-13T08:57:58.179Z",
       "notes": "Stage 2: Patient Registration Verified"
     },
     {
@@ -409,7 +399,7 @@
       "actor_name": "Metro Care Staff",
       "actor_role": "Phlebotomist",
       "location": "Metro Care Diagnostic Center",
-      "timestamp": "2026-10-09T04:37:16.639Z",
+      "timestamp": "2026-10-13T16:57:58.180Z",
       "notes": "Stage 3: Sample Collection"
     },
     {
@@ -420,7 +410,7 @@
       "actor_name": "Metro Care Staff",
       "actor_role": "Specimen Tech",
       "location": "Metro Care Diagnostic Center",
-      "timestamp": "2026-10-09T05:37:16.640Z",
+      "timestamp": "2026-10-13T17:57:58.180Z",
       "notes": "Stage 4: Sample Registered in LIMS"
     },
     {
@@ -431,7 +421,7 @@
       "actor_name": "Express Logistics Staff",
       "actor_role": "ColdChain Courier",
       "location": "Metro Care Diagnostic Center",
-      "timestamp": "2026-10-09T08:37:16.641Z",
+      "timestamp": "2026-10-13T20:57:58.180Z",
       "notes": "Stage 5: Logistics Pickup"
     },
     {
@@ -442,7 +432,7 @@
       "actor_name": "Kenva Logistics Dispatch",
       "actor_role": "Logistics System",
       "location": "En Route to Lab",
-      "timestamp": "2026-10-09T10:37:16.641Z",
+      "timestamp": "2026-10-13T22:57:58.181Z",
       "notes": "Stage 6: In Transit"
     },
     {
@@ -453,7 +443,7 @@
       "actor_name": "Receiving Tech P. Vani",
       "actor_role": "Lab Staff",
       "location": "Kenva Central Ref Lab (Tirupati)",
-      "timestamp": "2026-10-09T13:37:16.642Z",
+      "timestamp": "2026-10-14T01:57:58.181Z",
       "notes": "Stage 7: Laboratory Received"
     },
     {
@@ -464,60 +454,69 @@
       "actor_name": "Dr. K. Saroja, MD",
       "actor_role": "Endocrinology Specialist",
       "location": "Kenva Central Ref Lab (Tirupati)",
-      "timestamp": "2026-10-09T15:37:16.642Z",
+      "timestamp": "2026-10-14T03:57:58.181Z",
       "notes": "Stage 8: Testing in Progress"
     }
   ],
   "notifications": [
     {
-      "id": "NOTIF-1791563836644-7dk2",
+      "id": "NOTIF-1791953878182-zhm1",
       "user_id": "USR-PAT-01",
       "title": "Diagnostic Report Available",
       "message": "Your report for Order #ORD-9021 is ready for viewing and download.",
       "type": "REPORT_AVAILABLE",
       "is_read": 0,
-      "created_at": "2026-10-09T16:37:16.644Z"
+      "created_at": "2026-10-14T04:57:58.182Z"
     },
     {
-      "id": "NOTIF-1791563836644-f08z",
+      "id": "NOTIF-1791953878182-2z1i",
       "user_id": "USR-PAT-01",
       "title": "Booking Access Code Redeemed",
       "message": "Your code KEN-CODE-8921-X7 was verified. Full appointment scheduling is unlocked.",
       "type": "BOOKING_CODE_REDEEMED",
       "is_read": 0,
-      "created_at": "2026-10-09T16:37:16.644Z"
+      "created_at": "2026-10-14T04:57:58.182Z"
     },
     {
-      "id": "NOTIF-1791563836645-ik2p",
+      "id": "NOTIF-1791953878183-333s",
       "user_id": "USR-PAT-02",
       "title": "Account Registration Received",
       "message": "Your registration is awaiting administrator approval. You will receive a booking access code after approval.",
       "type": "ACCOUNT_REGISTRATION",
       "is_read": 0,
-      "created_at": "2026-10-09T16:37:16.645Z"
+      "created_at": "2026-10-14T04:57:58.183Z"
     },
     {
-      "id": "NOTIF-1791906075843-bemv",
-      "user_id": "USR-1791906075827-68vd",
+      "id": "NOTIF-1791957365402-pw5h",
+      "user_id": "USR-1791957365397-a9cy",
       "title": "Kenva Health Systems — Registration Received",
-      "message": "Hello nani,\n\nYour registration with Kenva Health Systems is complete! Your assigned Patient ID is KEN-P-1003.\nYour account is currently awaiting administrator approval. Once approved, you will receive a booking access code in your portal to unlock appointment scheduling.\n\nThank you for choosing Kenva.",
+      "message": "Hello D hemateja Reddy,\n\nYour registration with Kenva Health Systems is complete! Your assigned Patient ID is KEN-P-1003.\nYour account is currently awaiting administrator approval. Once approved, you will receive a booking access code in your portal to unlock appointment scheduling.\n\nThank you for choosing Kenva.",
       "type": "ACCOUNT_REGISTRATION",
       "is_read": 0,
-      "created_at": "2026-10-13T15:41:15.843Z"
+      "created_at": "2026-10-14T05:56:05.402Z"
     },
     {
-      "id": "NOTIF-1791906125532-pazb",
-      "user_id": "USR-PAT-02",
-      "title": "Kenva Health Systems — Account Approved & Booking Access Code",
-      "message": "Hello Ananya Rao,\n\nGreat news! Your Kenva Health Systems account (KEN-P-1002) has been approved by our administration.\n\nYour Unique Booking Access Code is: KEN-CODE-EDBD-6428\nExpires: 12/11/2026\n\nPlease log in to your patient portal and enter this code under \"Unlock Appointment Booking\" to enable appointment requests.\n\nThank you,\nKenva Health Systems",
-      "type": "BOOKING_CODE_ISSUED",
+      "id": "NOTIF-1791957372906-erlu",
+      "user_id": "USR-1791957365397-a9cy",
+      "title": "Kenva Health Systems — Your Login OTP",
+      "message": "Hello D hemateja Reddy,\n\nYour one-time login code is: 716860\n\nThis code expires in 10 minutes. Do not share it with anyone.\n\n— Kenva Health Systems",
+      "type": "LOGIN_OTP",
       "is_read": 0,
-      "created_at": "2026-10-13T15:42:05.532Z"
+      "created_at": "2026-10-14T05:56:12.906Z"
+    },
+    {
+      "id": "NOTIF-1791957497250-rvdc",
+      "user_id": "USR-ADMIN-01",
+      "title": "Kenva Health Systems — Your Login OTP",
+      "message": "Hello Kenva Health Systems Admin,\n\nYour one-time login code is: 843791\n\nThis code expires in 10 minutes. Do not share it with anyone.\n\n— Kenva Health Systems",
+      "type": "LOGIN_OTP",
+      "is_read": 0,
+      "created_at": "2026-10-14T05:58:17.250Z"
     }
   ],
   "audit_logs": [
     {
-      "id": "AUD-1791563836646-lxd1",
+      "id": "AUD-1791953878183-ql8r",
       "actor_id": "USR-ADMIN-01",
       "actor_name": "Kenva Health Systems Admin",
       "actor_role": "ADMIN",
@@ -525,51 +524,40 @@
       "target_type": "SYSTEM",
       "target_id": "KENVA_CORE",
       "details": "Database initialized with clean clinical demonstration dataset.",
-      "timestamp": "2026-10-09T16:37:16.646Z"
+      "timestamp": "2026-10-14T04:57:58.183Z"
     },
     {
-      "id": "AUD-1791906075836-l1o4",
-      "actor_id": "USR-1791906075827-68vd",
-      "actor_name": "nani",
+      "id": "AUD-1791957365400-zlqg",
+      "actor_id": "USR-1791957365397-a9cy",
+      "actor_name": "D hemateja Reddy",
       "actor_role": "PATIENT",
       "action": "PATIENT_REGISTERED",
       "target_type": "PATIENT_PROFILE",
       "target_id": "KEN-P-1003",
-      "details": "{\"email\":\"nanireddyd144@gmial.com\",\"city\":\"tirupati\",\"patientId\":\"KEN-P-1003\"}",
-      "timestamp": "2026-10-13T15:41:15.836Z"
+      "details": "{\"email\":\"dhematejareddy@gmail.com\",\"city\":\"tirupati\",\"patientId\":\"KEN-P-1003\"}",
+      "timestamp": "2026-10-14T05:56:05.400Z"
     },
     {
-      "id": "AUD-1791906107392-5db2",
-      "actor_id": "USR-PAT-02",
-      "actor_name": "Ananya Rao",
+      "id": "AUD-1791957378490-r7pr",
+      "actor_id": "USR-1791957365397-a9cy",
+      "actor_name": "D hemateja Reddy",
       "actor_role": "PATIENT",
-      "action": "USER_LOGIN",
+      "action": "USER_LOGIN_OTP_VERIFIED",
       "target_type": "USER",
-      "target_id": "USR-PAT-02",
+      "target_id": "USR-1791957365397-a9cy",
       "details": "{\"role\":\"PATIENT\"}",
-      "timestamp": "2026-10-13T15:41:47.392Z"
+      "timestamp": "2026-10-14T05:56:18.490Z"
     },
     {
-      "id": "AUD-1791906118685-96by",
+      "id": "AUD-1791957502253-x440",
       "actor_id": "USR-ADMIN-01",
       "actor_name": "Kenva Health Systems Admin",
       "actor_role": "ADMIN",
-      "action": "USER_LOGIN",
+      "action": "USER_LOGIN_OTP_VERIFIED",
       "target_type": "USER",
       "target_id": "USR-ADMIN-01",
       "details": "{\"role\":\"ADMIN\"}",
-      "timestamp": "2026-10-13T15:41:58.685Z"
-    },
-    {
-      "id": "AUD-1791906125417-ec64",
-      "actor_id": "USR-ADMIN-01",
-      "actor_name": "Kenva Health Systems Admin",
-      "actor_role": "ADMIN",
-      "action": "APPROVE_PATIENT_ACCOUNT",
-      "target_type": "PATIENT_PROFILE",
-      "target_id": "KEN-P-1002",
-      "details": "{\"bookingCode\":\"KEN-CODE-EDBD-6428\",\"expiresAt\":\"2026-11-12T15:42:05.413Z\"}",
-      "timestamp": "2026-10-13T15:42:05.417Z"
+      "timestamp": "2026-10-14T05:58:22.253Z"
     }
   ],
   "email_config": {
@@ -581,5 +569,25 @@
     "from_email": "",
     "is_enabled": 0,
     "last_updated": "2026-10-09T13:57:43.059Z"
-  }
+  },
+  "login_otps": [
+    {
+      "id": "OTP-1791957372904-zw1h",
+      "user_id": "USR-1791957365397-a9cy",
+      "otp_hash": "716860",
+      "expires_at": "2026-10-14T06:06:12.904Z",
+      "used": true,
+      "role": "PATIENT",
+      "expected_role": "PATIENT"
+    },
+    {
+      "id": "OTP-1791957497249-ehze",
+      "user_id": "USR-ADMIN-01",
+      "otp_hash": "843791",
+      "expires_at": "2026-10-14T06:08:17.249Z",
+      "used": true,
+      "role": "ADMIN",
+      "expected_role": "ADMIN"
+    }
+  ]
 }
