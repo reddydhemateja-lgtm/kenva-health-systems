@@ -51,8 +51,13 @@ async function runTests() {
     password: 'Password123!',
     expectedRole: 'PATIENT'
   });
-  console.log('2. Approved Patient Login:', pLogin.status, pLogin.body.user.name, pLogin.body.user.patientProfile.patient_id);
-  const pToken = pLogin.body.token;
+  console.log('2. Approved Patient Login Step 1:', pLogin.status, 'OTP sent:', pLogin.body.otpSent);
+  const pVerify = await makeRequest('/api/auth/verify-otp', 'POST', {
+    userId: pLogin.body.userId,
+    otp: pLogin.body.demoOtp
+  });
+  console.log('2b. Approved Patient OTP Verified:', pVerify.status, pVerify.body.user.name, pVerify.body.user.patientProfile.patient_id);
+  const pToken = pVerify.body.token;
 
   // 3. Patient Dashboard check
   const pDash = await makeRequest('/api/patient/dashboard', 'GET', null, pToken);
@@ -60,8 +65,8 @@ async function runTests() {
 
   // 4. Admin Login (Kenva Health Systems Admin)
   const aLogin = await makeRequest('/api/auth/login', 'POST', {
-    identifier: 'admin@kenva.local',
-    password: 'AdminPassword123!',
+    identifier: 'reddydhemateja@gmail.com',
+    password: 'nanireddykenva',
     expectedRole: 'ADMIN'
   });
   console.log('4. Admin Login:', aLogin.status, aLogin.body.user.name);
@@ -81,8 +86,12 @@ async function runTests() {
     password: 'Password123!',
     expectedRole: 'PATIENT'
   });
-  console.log('7. Pending Patient Login response:', pendLogin.status, pendLogin.body);
-  const pendToken = pendLogin.body.token;
+  const pendVerify = await makeRequest('/api/auth/verify-otp', 'POST', {
+    userId: pendLogin.body.userId,
+    otp: pendLogin.body.demoOtp
+  });
+  console.log('7. Pending Patient OTP Verified:', pendVerify.status, pendVerify.body.user.name);
+  const pendToken = pendVerify.body.token;
 
   // 8. Redeem Code in Patient Portal
   const redeemRes = await makeRequest('/api/patient/verify-booking-code', 'POST', {

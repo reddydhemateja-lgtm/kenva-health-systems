@@ -130,7 +130,9 @@ export default function OtpVerificationModal({ otpState, onSuccess, onBack, setA
         {/* Demo OTP Banner (when SMTP not configured) */}
         {otpState.demoOtp && (
           <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/40 text-center">
-            <p className="text-amber-400 text-xs font-semibold mb-2 uppercase tracking-wider">⚠ Demo Mode — Email Not Configured</p>
+            <p className="text-amber-400 text-xs font-semibold mb-2 uppercase tracking-wider flex items-center justify-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5" /> Demo Mode: Email Not Configured
+            </p>
             <p className="text-slate-300 text-xs mb-3">Your one-time login code is (auto-filled below):</p>
             <div className="inline-block bg-slate-950 border-2 border-amber-400/60 rounded-xl px-6 py-3">
               <span className="text-3xl font-mono font-bold tracking-[0.4em] text-amber-300">{otpState.demoOtp}</span>
@@ -176,8 +178,8 @@ export default function OtpVerificationModal({ otpState, onSuccess, onBack, setA
         <button
           onClick={handleVerify}
           disabled={loading || digits.join('').length < 6}
-          className="w-full py-3.5 rounded-xl bg-gradient-to-r from-teal-500 to-cyan-500 text-white font-bold text-base
-            hover:from-teal-400 hover:to-cyan-400 transition-all duration-200
+          className="w-full py-3.5 rounded-xl bg-teal-600 text-white font-bold text-base
+            hover:bg-teal-500 transition-all duration-200
             disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mb-4"
         >
           <ShieldCheck className="w-5 h-5" />
@@ -204,8 +206,8 @@ export default function OtpVerificationModal({ otpState, onSuccess, onBack, setA
         </div>
 
         {/* Hint */}
-        <p className="text-center text-xs text-slate-600 mt-6">
-          ⏰ Code expires in 10 minutes · Check your spam folder if not received
+        <p className="text-center text-xs text-slate-400 mt-6 flex items-center justify-center gap-1">
+          Code expires in 10 minutes. Check your spam folder if not received in inbox.
         </p>
       </div>
     </div>

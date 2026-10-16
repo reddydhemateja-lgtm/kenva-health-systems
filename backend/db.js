@@ -34,6 +34,9 @@ const defaultData = {
 
 let data = { ...defaultData };
 
+const EventEmitter = require('events');
+const dbEvents = new EventEmitter();
+
 function loadDb() {
   try {
     if (fs.existsSync(dbFilePath)) {
@@ -44,6 +47,13 @@ function loadDb() {
         if (!data[key]) {
           data[key] = defaultData[key];
         }
+      }
+      // Ensure all patient profiles are approved and have booking permissions enabled (no approval waiting)
+      if (Array.isArray(data.patient_profiles)) {
+        data.patient_profiles.forEach(p => {
+          p.approval_status = 'APPROVED';
+          p.booking_permission = 1;
+        });
       }
     } else {
       saveDb();
@@ -65,8 +75,17 @@ function saveDb() {
 
 // Database helper functions
 const db = {
+  events: dbEvents,
+
   reload() {
     loadDb();
+  },
+
+  broadcastChange(changeEvent) {
+    dbEvents.emit('change', {
+      timestamp: new Date().toISOString(),
+      ...changeEvent
+    });
   },
 
   getCollection(table) {
@@ -88,6 +107,7 @@ const db = {
     const list = this.getCollection(table);
     list.push(item);
     saveDb();
+    dbEvents.emit('change', { action: 'INSERT', table, item });
     return item;
   },
 
@@ -101,7 +121,10 @@ const db = {
       }
       return item;
     });
-    if (updatedCount > 0) saveDb();
+    if (updatedCount > 0) {
+      saveDb();
+      dbEvents.emit('change', { action: 'UPDATE', table, updateData });
+    }
     return updatedCount;
   },
 
@@ -109,7 +132,10 @@ const db = {
     const list = this.getCollection(table);
     const initialLen = list.length;
     data[table] = list.filter(item => !filterFn(item));
-    if (data[table].length !== initialLen) saveDb();
+    if (data[table].length !== initialLen) {
+      saveDb();
+      dbEvents.emit('change', { action: 'DELETE', table });
+    }
     return initialLen - data[table].length;
   },
 

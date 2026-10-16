@@ -1,40 +1,51 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  User, CheckCircle2, AlertCircle, Key, Calendar, Clock, Plus, 
-  FlaskConical, FileText, Bell, Sparkles, Building2, MapPin, Download, 
-  Check, RefreshCw, ChevronRight, Lock
+  User, CheckCircle2, AlertCircle, Calendar, Clock, Plus, 
+  FlaskConical, FileText, Bell, Building2, MapPin, Download, 
+  Check, RefreshCw, ChevronRight, Activity, Phone, ShieldCheck
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useAuth } from '../context/AuthContext';
+import { useLiveSync } from '../context/useLiveSync';
 import SampleTimeline from '../components/SampleTimeline';
 import ReportModal from '../components/ReportModal';
 
 export default function PatientDashboard({ setActiveTab }) {
-  const { user, token, setUser } = useAuth();
+  const { user, token } = useAuth();
   
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   
-  // Code Redemption state
-  const [bookingCodeInput, setBookingCodeInput] = useState('');
-  const [codeVerifying, setCodeVerifying] = useState(false);
-  const [codeMsg, setCodeMsg] = useState({ text: '', isError: false });
-
   // Book Appointment Modal
   const [isBookModalOpen, setIsBookModalOpen] = useState(false);
   const [bookForm, setBookForm] = useState({
     hospital_id: '',
+    test_type: 'Comprehensive Metabolic Panel (CMP)',
     preferred_date: '',
-    preferred_time: '10:00 AM',
+    preferred_time: '09:30 AM',
     reason: '',
     symptoms: ''
   });
   const [bookingLoading, setBookingLoading] = useState(false);
   const [bookingError, setBookingError] = useState('');
+  const [bookingSuccessMsg, setBookingSuccessMsg] = useState('');
 
   // Report Modal
   const [selectedReport, setSelectedReport] = useState(null);
+
+  // Available tests catalog
+  const availableServices = [
+    { code: 'CMP', name: 'Comprehensive Metabolic Panel (CMP)', category: 'Biochemistry', duration: '24h' },
+    { code: 'CBC', name: 'Complete Blood Count (CBC) with Differential', category: 'Hematology', duration: '12h' },
+    { code: 'LIPID', name: 'Lipid Profile & Atherogenic Index', category: 'Cardiology', duration: '24h' },
+    { code: 'HBA1C', name: 'Glycated Hemoglobin (HbA1c) & Fasting Plasma Glucose', category: 'Diabetes Screening', duration: '12h' },
+    { code: 'LFT', name: 'Liver Function Test (LFT) Panel', category: 'Hepatic Function', duration: '24h' },
+    { code: 'KFT', name: 'Renal Function & Electrolyte Profile (KFT/RFT)', category: 'Nephrology', duration: '24h' },
+    { code: 'THYROID', name: 'Comprehensive Thyroid Panel (TSH, Free T3, Free T4)', category: 'Endocrinology', duration: '24h' },
+    { code: 'VITAMIN', name: 'Vitamin D (25-OH) & Vitamin B12 Immunoassay', category: 'Micronutrients', duration: '36h' },
+    { code: 'CARDIAC', name: 'High-Sensitivity Troponin-I & hs-CRP Cardiac Markers', category: 'Cardiology', duration: '6h' }
+  ];
 
   const fetchDashboard = async () => {
     if (!token) return;
@@ -46,7 +57,7 @@ export default function PatientDashboard({ setActiveTab }) {
       if (!res.ok) throw new Error(data.error || 'Failed to load dashboard.');
       setDashboardData(data);
 
-      // Set default hospital id for booking form
+      // Set default hospital id for booking form if not yet chosen
       if (data.hospitals && data.hospitals.length > 0 && !bookForm.hospital_id) {
         setBookForm(prev => ({ ...prev, hospital_id: data.hospitals[0].id }));
       }
@@ -61,49 +72,17 @@ export default function PatientDashboard({ setActiveTab }) {
     fetchDashboard();
   }, [token]);
 
-  // Code Verification Handler
-  const handleVerifyCode = async (e) => {
-    e.preventDefault();
-    if (!bookingCodeInput) return;
-    setCodeVerifying(true);
-    setCodeMsg({ text: '', isError: false });
-
-    try {
-      const res = await fetch('/api/patient/verify-booking-code', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ code: bookingCodeInput })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Verification failed.');
-
-      // Trigger Confetti Celebration!
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 }
-      });
-
-      setCodeMsg({ text: data.message, isError: false });
-      setBookingCodeInput('');
-      
-      // Update local state and refetch dashboard
-      fetchDashboard();
-    } catch (err) {
-      setCodeMsg({ text: err.message, isError: true });
-    } finally {
-      setCodeVerifying(false);
-    }
-  };
+  // Live real-time synchronization via SSE and polling fallback (3s)
+  useLiveSync(() => {
+    fetchDashboard();
+  }, { pollIntervalMs: 3000, enabled: !!token });
 
   // Submit Appointment Request Handler
   const handleBookAppointment = async (e) => {
     e.preventDefault();
     setBookingLoading(true);
     setBookingError('');
+    setBookingSuccessMsg('');
 
     try {
       const res = await fetch('/api/patient/book-appointment', {
@@ -117,16 +96,19 @@ export default function PatientDashboard({ setActiveTab }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to submit appointment request.');
 
-      setIsBookModalOpen(false);
-      setBookForm({
-        hospital_id: dashboardData?.hospitals?.[0]?.id || '',
-        preferred_date: '',
-        preferred_time: '10:00 AM',
-        reason: '',
-        symptoms: ''
+      confetti({
+        particleCount: 70,
+        spread: 60,
+        origin: { y: 0.6 }
       });
 
-      // Refetch
+      setBookingSuccessMsg(`Appointment ${data.appointmentId} booked successfully!`);
+      setTimeout(() => {
+        setIsBookModalOpen(false);
+        setBookingSuccessMsg('');
+      }, 1500);
+
+      // Refresh dashboard
       fetchDashboard();
     } catch (err) {
       setBookingError(err.message);
@@ -144,7 +126,7 @@ export default function PatientDashboard({ setActiveTab }) {
       });
       setDashboardData(prev => ({
         ...prev,
-        notifications: prev.notifications.map(n => n.id === notifId ? { ...n, is_read: 1 } : n)
+        notifications: (prev?.notifications || []).map(n => n.id === notifId ? { ...n, is_read: 1 } : n)
       }));
     } catch (err) {
       console.error(err);
@@ -155,7 +137,7 @@ export default function PatientDashboard({ setActiveTab }) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center text-slate-400 gap-3">
         <RefreshCw className="w-6 h-6 animate-spin text-teal-400" />
-        <span>Loading your authenticated patient portal...</span>
+        <span>Loading live patient portal...</span>
       </div>
     );
   }
@@ -182,173 +164,64 @@ export default function PatientDashboard({ setActiveTab }) {
   const notifications = dashboardData?.notifications || [];
   const hospitals = dashboardData?.hospitals || [];
 
-  const isApproved = profile.approval_status === 'APPROVED';
-  const hasBookingPermission = profile.booking_permission === 1;
+  const unreadNotificationsCount = notifications.filter(n => !n.is_read).length;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fadeIn">
       
       {/* Patient Profile Header */}
-      <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-teal-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 relative overflow-hidden">
+      <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-teal-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 relative overflow-hidden shadow-xl">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-teal-500/20 border border-teal-500/40 text-teal-400 flex items-center justify-center font-bold text-2xl">
+          <div className="w-16 h-16 rounded-xl bg-teal-500/20 border border-teal-500/40 text-teal-400 flex items-center justify-center font-bold text-2xl">
             {profile.name ? profile.name.charAt(0) : 'P'}
           </div>
           <div>
             <div className="flex items-center gap-2">
               <h2 className="font-heading font-extrabold text-2xl text-white">{profile.name}</h2>
-              <span className={`badge ${isApproved ? 'badge-approved' : 'badge-pending'}`}>
-                {profile.approval_status}
+              <span className="badge badge-approved flex items-center gap-1">
+                <ShieldCheck className="w-3 h-3 text-emerald-400" /> Verified Patient
               </span>
             </div>
             <p className="text-xs text-slate-400 mt-1 flex flex-wrap items-center gap-x-4 gap-y-1">
               <span>Patient ID: <strong className="font-mono text-teal-400">{profile.patient_id}</strong></span>
-              <span>City: <strong className="text-slate-200">{profile.city}</strong></span>
+              <span>City: <strong className="text-slate-200">{profile.city || 'Tirupati'}</strong></span>
               <span>DOB: <strong className="text-slate-200">{profile.dob}</strong></span>
             </p>
           </div>
         </div>
 
-        {/* Action Button: Schedule Appointment */}
-        {hasBookingPermission ? (
+        {/* Action Button: Book Appointment */}
+        <div className="flex items-center gap-3">
           <button
             onClick={() => setIsBookModalOpen(true)}
-            className="btn-teal text-xs py-3 px-6 shadow-xl"
+            className="btn-teal text-xs py-3 px-6 shadow-xl flex items-center gap-2"
           >
-            <Plus className="w-4 h-4" /> Schedule New Appointment
+            <Plus className="w-4 h-4" /> Book Diagnostic Appointment
           </button>
-        ) : (
-          <div className="text-xs text-slate-400 flex items-center gap-1.5 bg-slate-950/60 p-2.5 rounded-xl border border-slate-800">
-            <Lock className="w-4 h-4 text-amber-400" />
-            <span>Booking Access Locked</span>
-          </div>
-        )}
+        </div>
       </div>
-
-      {/* Account Status & Code Verification Banner */}
-      {!isApproved ? (
-        /* PENDING APPROVAL NOTICE */
-        <div className="glass-panel p-6 rounded-2xl border-amber-500/40 bg-amber-500/10 text-amber-200 space-y-2">
-          <div className="flex items-center gap-2 text-amber-400 font-bold text-sm">
-            <AlertCircle className="w-5 h-5 shrink-0" />
-            <span>Account Pending Administrator Approval</span>
-          </div>
-          <p className="text-xs text-slate-300 leading-relaxed">
-            Your account is awaiting administrator approval. You will receive a booking access code after approval.
-          </p>
-          <div className="text-[11px] text-slate-400 pt-2 border-t border-amber-500/20">
-            Tip: You can use the Admin Portal in another tab to approve this account ({profile.patient_id}) and issue a booking code.
-          </div>
-        </div>
-      ) : !hasBookingPermission ? (
-        /* APPROVED BUT CODE NOT REDEEMED - UNLOCK BOOKING CARD */
-        <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-teal-500/40 bg-gradient-to-r from-slate-900 via-slate-900 to-teal-950/40 space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-teal-500/20 text-teal-400 border border-teal-500/30">
-              <Key className="w-6 h-6 animate-bounce" />
-            </div>
-            <div>
-              <h3 className="font-heading font-bold text-lg text-white">
-                Unlock Appointment Booking
-              </h3>
-              <p className="text-xs text-slate-300">
-                Your account has been approved by administrator! Enter your unique Booking Access Code below to enable appointment scheduling.
-              </p>
-            </div>
-          </div>
-
-          <form onSubmit={handleVerifyCode} className="flex flex-col sm:flex-row gap-3 max-w-xl">
-            <input
-              type="text"
-              required
-              value={bookingCodeInput}
-              onChange={(e) => setBookingCodeInput(e.target.value)}
-              placeholder="Enter Booking Code (e.g. KEN-CODE-8921-X7)"
-              className="glass-input text-xs uppercase font-mono tracking-wider"
-            />
-            <button
-              type="submit"
-              disabled={codeVerifying}
-              className="btn-teal text-xs py-3 px-6 shrink-0"
-            >
-              {codeVerifying ? 'Verifying Code...' : 'Verify Code & Unlock'}
-            </button>
-          </form>
-
-          {codeMsg.text && (
-            <div className={`p-3 rounded-xl text-xs flex items-center gap-2 ${
-              codeMsg.isError ? 'bg-rose-500/10 border border-rose-500/30 text-rose-300' : 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-300'
-            }`}>
-              {codeMsg.isError ? <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" /> : <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />}
-              <span>{codeMsg.text}</span>
-            </div>
-          )}
-        </div>
-      ) : null}
 
       {/* Main Grid Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* Left 2 Columns: Appointments, Sample Journey, Reports */}
+        {/* Left 2 Columns: Sample Journey, Appointments, Reports */}
         <div className="lg:col-span-2 space-y-8">
           
-          {/* 1. Appointments Section */}
+          {/* 1. Live Sample Tracking & 11-Stage Journey (Top Priority) */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-heading font-bold text-xl text-white flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-teal-400" /> Appointment Requests & Status
+                <Activity className="w-5 h-5 text-teal-400 animate-pulse" /> Live Sample Tracking & Journey
               </h3>
-              {hasBookingPermission && (
-                <button
-                  onClick={() => setIsBookModalOpen(true)}
-                  className="btn-secondary text-xs py-1.5 px-3"
-                >
-                  <Plus className="w-4 h-4" /> Book Appointment
-                </button>
-              )}
+              <span className="text-xs text-teal-400 font-mono flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-teal-400 animate-ping inline-block"></span> Real-Time Connected
+              </span>
             </div>
 
-            {appointments.length === 0 ? (
-              <div className="glass-card p-6 text-center text-xs text-slate-400">
-                No appointment requests submitted yet.
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {appointments.map(apt => (
-                  <div key={apt.appointment_id} className="glass-card p-5 rounded-2xl border border-slate-800 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs font-bold text-teal-400">{apt.appointment_id}</span>
-                        <span className={`badge ${
-                          apt.status === 'CONFIRMED' ? 'badge-approved' : apt.status === 'REJECTED' ? 'badge-rejected' : 'badge-pending'
-                        }`}>
-                          {apt.status}
-                        </span>
-                      </div>
-                      <span className="text-xs text-slate-400 font-medium">
-                        {apt.preferred_date} at {apt.preferred_time}
-                      </span>
-                    </div>
-
-                    <div className="text-sm font-semibold text-white">{apt.hospitalName}</div>
-                    <p className="text-xs text-slate-300"><strong>Reason:</strong> {apt.reason}</p>
-                    {apt.symptoms && <p className="text-xs text-slate-400 italic">Symptoms: {apt.symptoms}</p>}
-                    {apt.notes && <p className="text-xs text-amber-300/80 bg-amber-500/10 p-2 rounded">Notes: {apt.notes}</p>}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* 2. Active Test Orders & 10-Stage Sample Timeline */}
-          <div className="space-y-4">
-            <h3 className="font-heading font-bold text-xl text-white flex items-center gap-2">
-              <FlaskConical className="w-5 h-5 text-teal-400" /> Active Diagnostic Orders & Sample Tracking
-            </h3>
-
             {testOrders.length === 0 ? (
-              <div className="glass-card p-6 text-center text-xs text-slate-400">
-                No active test orders or samples found.
+              <div className="glass-card p-6 text-center text-xs text-slate-400 rounded-xl border border-slate-800">
+                <FlaskConical className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+                No active diagnostic orders currently registered. Book an appointment below to initiate your diagnostic workflow.
               </div>
             ) : (
               <div className="space-y-6">
@@ -356,29 +229,92 @@ export default function PatientDashboard({ setActiveTab }) {
                   <div key={order.order_id} className="space-y-4">
                     
                     {/* Order summary card */}
-                    <div className="glass-card p-5 rounded-2xl border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="glass-card p-5 rounded-xl border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="font-mono text-xs font-bold text-cyan-400">{order.order_id}</span>
                           <span className="badge badge-info">{order.status}</span>
                         </div>
                         <h4 className="font-heading font-bold text-base text-white mt-1">{order.test_type}</h4>
-                        <p className="text-xs text-slate-400">Physician: {order.ordering_physician} • Facility: {order.hospitalName}</p>
+                        <p className="text-xs text-slate-400">
+                          Ordering Physician: <strong className="text-slate-300">{order.ordering_physician}</strong> • Facility: <strong className="text-slate-300">{order.hospitalName}</strong>
+                        </p>
                       </div>
 
                       {order.report && (
                         <button
                           onClick={() => setSelectedReport(order.report)}
-                          className="btn-teal text-xs py-2 px-4 shrink-0"
+                          className="btn-teal text-xs py-2 px-4 shrink-0 flex items-center gap-1.5"
                         >
-                          <FileText className="w-4 h-4" /> View Report
+                          <FileText className="w-4 h-4" /> View Final Report
                         </button>
                       )}
                     </div>
 
-                    {/* 10-Stage Interactive Workflow Timeline */}
-                    <SampleTimeline sample={order.sample} timeline={order.timeline} />
+                    {/* 11-Stage Interactive Workflow Timeline */}
+                    <SampleTimeline 
+                      sample={order.sample} 
+                      timeline={order.timeline} 
+                      onDownloadReport={() => {
+                        if (order.report) setSelectedReport(order.report);
+                      }}
+                    />
 
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* 2. Appointments Section */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-heading font-bold text-xl text-white flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-teal-400" /> Diagnostic Appointments
+              </h3>
+              <button
+                onClick={() => setIsBookModalOpen(true)}
+                className="btn-secondary text-xs py-1.5 px-3"
+              >
+                <Plus className="w-3.5 h-3.5" /> Book Another
+              </button>
+            </div>
+
+            {appointments.length === 0 ? (
+              <div className="glass-card p-6 text-center text-xs text-slate-400 rounded-xl border border-slate-800">
+                No appointment requests submitted yet. Click above to schedule your first appointment.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {appointments.map(apt => (
+                  <div key={apt.appointment_id} className="glass-card p-5 rounded-xl border border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs font-bold text-teal-400">{apt.appointment_id}</span>
+                        <span className={`badge ${
+                          apt.status === 'CONFIRMED' || apt.status === 'COMPLETED' ? 'badge-approved' : apt.status === 'REJECTED' || apt.status === 'CANCELLED' ? 'badge-rejected' : 'badge-pending'
+                        }`}>
+                          {apt.status}
+                        </span>
+                      </div>
+                      <span className="text-xs text-slate-400 font-medium flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5 text-teal-400" />
+                        {apt.preferred_date} at {apt.preferred_time}
+                      </span>
+                    </div>
+
+                    <div className="text-sm font-semibold text-white">{apt.hospitalName || 'Partner Facility'}</div>
+                    <p className="text-xs text-slate-300">
+                      <strong>Requested Service:</strong> {apt.test_type || apt.reason}
+                    </p>
+                    {apt.symptoms && (
+                      <p className="text-xs text-slate-400 italic">Clinical Notes: {apt.symptoms}</p>
+                    )}
+                    {apt.notes && (
+                      <p className="text-xs text-cyan-300/90 bg-cyan-950/40 p-2.5 rounded-lg border border-cyan-800/40">
+                        Facility Update: {apt.notes}
+                      </p>
+                    )}
                   </div>
                 ))}
               </div>
@@ -388,29 +324,31 @@ export default function PatientDashboard({ setActiveTab }) {
           {/* 3. Diagnostic Reports Section */}
           <div className="space-y-4">
             <h3 className="font-heading font-bold text-xl text-white flex items-center gap-2">
-              <FileText className="w-5 h-5 text-teal-400" /> Laboratory Reports & Signed PDFs
+              <FileText className="w-5 h-5 text-teal-400" /> Published Laboratory Reports
             </h3>
 
             {reports.length === 0 ? (
-              <div className="glass-card p-6 text-center text-xs text-slate-400">
-                No laboratory reports generated yet.
+              <div className="glass-card p-6 text-center text-xs text-slate-400 rounded-xl border border-slate-800">
+                No reports generated yet. Reports will appear automatically once testing and pathologist verification complete.
               </div>
             ) : (
               <div className="space-y-3">
                 {reports.map(rep => (
-                  <div key={rep.report_id} className="glass-card p-5 rounded-2xl border border-slate-800 flex items-center justify-between gap-4">
+                  <div key={rep.report_id || rep.id} className="glass-card p-5 rounded-xl border border-slate-800 flex items-center justify-between gap-4">
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-mono text-xs font-bold text-teal-400">{rep.report_id}</span>
-                        <span className="badge badge-approved">Final Report</span>
+                        <span className="badge badge-approved">Digitally Signed</span>
                       </div>
-                      <h4 className="font-semibold text-white text-sm mt-1">{rep.report_title}</h4>
-                      <p className="text-xs text-slate-400">Issued: {new Date(rep.created_at).toLocaleDateString()} • Pathologist: {rep.pathologist_name}</p>
+                      <h4 className="font-semibold text-white text-sm mt-1">{rep.test_type || rep.report_title}</h4>
+                      <p className="text-xs text-slate-400">
+                        Issued: {new Date(rep.created_at).toLocaleDateString()} • Pathologist: {rep.pathologist_name}
+                      </p>
                     </div>
 
                     <button
                       onClick={() => setSelectedReport(rep)}
-                      className="btn-teal text-xs py-2 px-4 shrink-0"
+                      className="btn-teal text-xs py-2 px-4 shrink-0 flex items-center gap-1.5"
                     >
                       <Download className="w-4 h-4" /> View & Download PDF
                     </button>
@@ -422,17 +360,24 @@ export default function PatientDashboard({ setActiveTab }) {
 
         </div>
 
-        {/* Right Column: Notifications & Partner Facilities */}
+        {/* Right Column: In-App Notifications & Network Hospitals */}
         <div className="space-y-8">
           
           {/* Notifications Card */}
-          <div className="glass-panel p-6 rounded-3xl border border-slate-800 space-y-4">
-            <h3 className="font-heading font-bold text-lg text-white flex items-center gap-2">
-              <Bell className="w-5 h-5 text-teal-400" /> Portal Notifications
-            </h3>
+          <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-heading font-bold text-lg text-white flex items-center gap-2">
+                <Bell className="w-5 h-5 text-teal-400" /> Activity Notifications
+              </h3>
+              {unreadNotificationsCount > 0 && (
+                <span className="px-2 py-0.5 rounded-md bg-teal-500/20 text-teal-300 border border-teal-500/40 text-[11px] font-bold">
+                  {unreadNotificationsCount} new
+                </span>
+              )}
+            </div>
 
             {notifications.length === 0 ? (
-              <p className="text-xs text-slate-400">No notifications.</p>
+              <p className="text-xs text-slate-400">No notifications at this time.</p>
             ) : (
               <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
                 {notifications.map(n => (
@@ -464,9 +409,9 @@ export default function PatientDashboard({ setActiveTab }) {
           </div>
 
           {/* Hospitals Facility List Card */}
-          <div className="glass-panel p-6 rounded-3xl border border-slate-800 space-y-4">
+          <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-4">
             <h3 className="font-heading font-bold text-lg text-white flex items-center gap-2">
-              <Building2 className="w-5 h-5 text-teal-400" /> Network Partner Facilities
+              <Building2 className="w-5 h-5 text-teal-400" /> Accredited Partner Facilities
             </h3>
 
             <div className="space-y-3">
@@ -491,9 +436,19 @@ export default function PatientDashboard({ setActiveTab }) {
       {isBookModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
           <div className="glass-panel w-full max-w-lg p-6 sm:p-8 rounded-2xl border border-teal-500/30 shadow-2xl relative">
-            <h3 className="font-heading font-bold text-xl text-white mb-4">
-              Schedule Diagnostic Appointment
+            <h3 className="font-heading font-bold text-xl text-white mb-1">
+              Book Diagnostic Appointment
             </h3>
+            <p className="text-xs text-slate-400 mb-4">
+              Select your preferred accredited hospital facility, test type, date, and appointment slot.
+            </p>
+
+            {bookingSuccessMsg && (
+              <div className="p-3 mb-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+                <span>{bookingSuccessMsg}</span>
+              </div>
+            )}
 
             {bookingError && (
               <div className="p-3 mb-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
@@ -503,6 +458,7 @@ export default function PatientDashboard({ setActiveTab }) {
             )}
 
             <form onSubmit={handleBookAppointment} className="space-y-4">
+              {/* Select Hospital */}
               <div>
                 <label className="text-xs font-semibold text-slate-300 block mb-1">Select Hospital Facility *</label>
                 <select
@@ -514,6 +470,23 @@ export default function PatientDashboard({ setActiveTab }) {
                   {hospitals.map(h => (
                     <option key={h.id} value={h.id} className="bg-slate-900 text-white">
                       {h.name} ({h.city})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Select Test / Service */}
+              <div>
+                <label className="text-xs font-semibold text-slate-300 block mb-1">Diagnostic Test or Panel *</label>
+                <select
+                  required
+                  value={bookForm.test_type}
+                  onChange={(e) => setBookForm({ ...bookForm, test_type: e.target.value })}
+                  className="glass-input text-xs text-slate-200 bg-slate-900"
+                >
+                  {availableServices.map(srv => (
+                    <option key={srv.code} value={srv.name} className="bg-slate-900 text-white">
+                      {srv.name} ({srv.category} - {srv.duration})
                     </option>
                   ))}
                 </select>
@@ -532,29 +505,29 @@ export default function PatientDashboard({ setActiveTab }) {
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-slate-300 block mb-1">Preferred Time *</label>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Time Slot *</label>
                   <select
                     value={bookForm.preferred_time}
                     onChange={(e) => setBookForm({ ...bookForm, preferred_time: e.target.value })}
                     className="glass-input text-xs text-slate-200 bg-slate-900"
                   >
-                    <option value="08:30 AM" className="bg-slate-900">08:30 AM</option>
+                    <option value="08:30 AM" className="bg-slate-900">08:30 AM (Fasting)</option>
                     <option value="09:30 AM" className="bg-slate-900">09:30 AM</option>
                     <option value="10:30 AM" className="bg-slate-900">10:30 AM</option>
-                    <option value="02:00 PM" className="bg-slate-900">02:00 PM</option>
-                    <option value="04:00 PM" className="bg-slate-900">04:00 PM</option>
+                    <option value="11:30 AM" className="bg-slate-900">11:30 AM</option>
+                    <option value="02:30 PM" className="bg-slate-900">02:30 PM</option>
+                    <option value="04:30 PM" className="bg-slate-900">04:30 PM</option>
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-300 block mb-1">Reason for Appointment *</label>
+                <label className="text-xs font-semibold text-slate-300 block mb-1">Reason / Clinical Context</label>
                 <input
                   type="text"
-                  required
                   value={bookForm.reason}
                   onChange={(e) => setBookForm({ ...bookForm, reason: e.target.value })}
-                  placeholder="e.g. Annual Diabetes Screening & Comprehensive Metabolic Panel"
+                  placeholder="e.g. Routine metabolic checkup or doctor referral"
                   className="glass-input text-xs"
                 />
               </div>
@@ -565,7 +538,7 @@ export default function PatientDashboard({ setActiveTab }) {
                   rows="2"
                   value={bookForm.symptoms}
                   onChange={(e) => setBookForm({ ...bookForm, symptoms: e.target.value })}
-                  placeholder="Brief description of any symptoms or fasting notes"
+                  placeholder="Any symptoms, medications, or fasting notes"
                   className="glass-input text-xs"
                 />
               </div>
@@ -581,9 +554,15 @@ export default function PatientDashboard({ setActiveTab }) {
                 <button
                   type="submit"
                   disabled={bookingLoading}
-                  className="btn-teal text-xs w-1/2 py-2.5"
+                  className="btn-teal text-xs w-1/2 py-2.5 flex items-center justify-center gap-1.5"
                 >
-                  {bookingLoading ? 'Submitting...' : 'Submit Request'}
+                  {bookingLoading ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Submitting...
+                    </>
+                  ) : (
+                    'Submit Request'
+                  )}
                 </button>
               </div>
             </form>

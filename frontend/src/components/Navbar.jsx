@@ -71,7 +71,7 @@ export default function Navbar({ activeTab, setActiveTab, onOpenDemoModal }) {
                 </span>
               </div>
               <p className="text-[11px] text-slate-400 font-medium hidden sm:block">
-                A Digital Nervous System for Modern Clinics
+                Clinical Diagnostic & Specimen Logistics Network
               </p>
             </div>
           </div>

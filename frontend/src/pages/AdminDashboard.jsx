@@ -226,7 +226,7 @@ export default function AdminDashboard() {
   if (loading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center text-slate-400 gap-3">
-        <RefreshCw className="w-6 h-6 animate-spin text-purple-400" />
+        <RefreshCw className="w-6 h-6 animate-spin text-teal-400" />
         <span>Loading administrator portal data...</span>
       </div>
     );
@@ -250,15 +250,15 @@ export default function AdminDashboard() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fadeIn">
       
       {/* Header Banner */}
-      <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-purple-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 relative overflow-hidden bg-[#111d38]">
+      <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-teal-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 relative overflow-hidden bg-[#111d38]">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-purple-500/20 border border-purple-500/40 text-purple-300 flex items-center justify-center font-bold">
+          <div className="w-14 h-14 rounded-2xl bg-teal-500/20 border border-teal-500/40 text-teal-300 flex items-center justify-center font-bold">
             <ShieldCheck className="w-8 h-8" />
           </div>
           <div>
             <div className="flex items-center gap-2">
               <h2 className="font-heading font-extrabold text-2xl text-white">Kenva Health Systems Admin</h2>
-              <span className="badge badge-pending border-purple-500/30 text-purple-300 bg-purple-500/10">Global System Control</span>
+              <span className="badge badge-pending border-teal-500/30 text-teal-300 bg-teal-500/10">Global System Control</span>
             </div>
             <p className="text-xs text-slate-300 mt-1">
               Master Administrator • Network Status: <strong className="text-emerald-400 font-semibold">ALL SYSTEMS OPERATIONAL</strong>
@@ -269,7 +269,7 @@ export default function AdminDashboard() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setIsAddHospitalOpen(true)}
-            className="btn-teal text-xs py-2.5 px-4 bg-purple-600 hover:bg-purple-500 shadow-xl"
+            className="btn-teal text-xs py-2.5 px-4 bg-teal-600 hover:bg-teal-500 shadow-xl"
           >
             <Plus className="w-4 h-4" /> Add Partner Hospital
           </button>
@@ -309,8 +309,8 @@ export default function AdminDashboard() {
         </div>
 
         <div className="glass-card p-4 rounded-2xl border border-slate-700 bg-slate-800/90">
-          <div className="text-[11px] text-purple-400 font-semibold">Samples in Transit</div>
-          <div className="font-heading font-extrabold text-2xl text-purple-300 mt-1">{stats?.samplesInTransit || 0}</div>
+          <div className="text-[11px] text-teal-400 font-semibold">Samples in Transit</div>
+          <div className="font-heading font-extrabold text-2xl text-teal-300 mt-1">{stats?.samplesInTransit || 0}</div>
         </div>
 
         <div className="glass-card p-4 rounded-2xl border border-slate-700 bg-slate-800/90">
@@ -334,7 +334,7 @@ export default function AdminDashboard() {
         <button
           onClick={() => setActiveTab('registrations')}
           className={`px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 ${
-            activeTab === 'registrations' ? 'bg-purple-600 text-white font-bold shadow-lg' : 'bg-slate-800 text-slate-300 hover:text-white'
+            activeTab === 'registrations' ? 'bg-teal-600 text-white font-bold shadow-lg' : 'bg-slate-800 text-slate-300 hover:text-white'
           }`}
         >
           <Users className="w-4 h-4" /> Patient Accounts & Password Management ({pendingPatients.length} Pending)
@@ -343,7 +343,7 @@ export default function AdminDashboard() {
         <button
           onClick={() => setActiveTab('codes')}
           className={`px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 ${
-            activeTab === 'codes' ? 'bg-purple-600 text-white font-bold shadow-lg' : 'bg-slate-800 text-slate-300 hover:text-white'
+            activeTab === 'codes' ? 'bg-teal-600 text-white font-bold shadow-lg' : 'bg-slate-800 text-slate-300 hover:text-white'
           }`}
         >
           <Key className="w-4 h-4" /> Booking Access Codes
@@ -352,7 +352,7 @@ export default function AdminDashboard() {
         <button
           onClick={() => setActiveTab('appointments')}
           className={`px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 ${
-            activeTab === 'appointments' ? 'bg-purple-600 text-white font-bold shadow-lg' : 'bg-slate-800 text-slate-300 hover:text-white'
+            activeTab === 'appointments' ? 'bg-teal-600 text-white font-bold shadow-lg' : 'bg-slate-800 text-slate-300 hover:text-white'
           }`}
         >
           <Calendar className="w-4 h-4" /> Appointments Queue
@@ -361,7 +361,7 @@ export default function AdminDashboard() {
         <button
           onClick={() => setActiveTab('journey')}
           className={`px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 ${
-            activeTab === 'journey' ? 'bg-purple-600 text-white font-bold shadow-lg' : 'bg-slate-800 text-slate-300 hover:text-white'
+            activeTab === 'journey' ? 'bg-teal-600 text-white font-bold shadow-lg' : 'bg-slate-800 text-slate-300 hover:text-white'
           }`}
         >
           <FlaskConical className="w-4 h-4" /> 10-Stage Sample Journeys
@@ -370,7 +370,7 @@ export default function AdminDashboard() {
         <button
           onClick={() => setActiveTab('hospitals')}
           className={`px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 ${
-            activeTab === 'hospitals' ? 'bg-purple-600 text-white font-bold shadow-lg' : 'bg-slate-800 text-slate-300 hover:text-white'
+            activeTab === 'hospitals' ? 'bg-teal-600 text-white font-bold shadow-lg' : 'bg-slate-800 text-slate-300 hover:text-white'
           }`}
         >
           <Building2 className="w-4 h-4" /> Partner Hospitals ({hospitals.length})
@@ -379,7 +379,7 @@ export default function AdminDashboard() {
         <button
           onClick={() => setActiveTab('email')}
           className={`px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 ${
-            activeTab === 'email' ? 'bg-purple-600 text-white font-bold shadow-lg' : 'bg-slate-800 text-slate-300 hover:text-white'
+            activeTab === 'email' ? 'bg-teal-600 text-white font-bold shadow-lg' : 'bg-slate-800 text-slate-300 hover:text-white'
           }`}
         >
           <Mail className="w-4 h-4" /> Email Provider
@@ -388,7 +388,7 @@ export default function AdminDashboard() {
         <button
           onClick={() => setActiveTab('audit')}
           className={`px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 ${
-            activeTab === 'audit' ? 'bg-purple-600 text-white font-bold shadow-lg' : 'bg-slate-800 text-slate-300 hover:text-white'
+            activeTab === 'audit' ? 'bg-teal-600 text-white font-bold shadow-lg' : 'bg-slate-800 text-slate-300 hover:text-white'
           }`}
         >
           <Activity className="w-4 h-4" /> Audit Logs
@@ -400,7 +400,7 @@ export default function AdminDashboard() {
         <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-slate-800 space-y-6">
           <div className="flex items-center justify-between">
             <h3 className="font-heading font-bold text-xl text-white flex items-center gap-2">
-              <Users className="w-5 h-5 text-purple-400" /> Patient Registrations & Account Management
+              <Users className="w-5 h-5 text-teal-400" /> Patient Registrations & Account Management
             </h3>
             <span className="text-xs text-slate-300">Total: {patients.length} Registered</span>
           </div>
@@ -452,7 +452,7 @@ export default function AdminDashboard() {
                               setApprovalModalPatient(pat);
                               setGeneratedCodeResult(null);
                             }}
-                            className="btn-teal text-[11px] py-1 px-2.5 bg-purple-600 hover:bg-purple-500"
+                            className="btn-teal text-[11px] py-1 px-2.5 bg-teal-600 hover:bg-teal-500"
                           >
                             <Check className="w-3 h-3" /> Approve & Issue Code
                           </button>
@@ -493,7 +493,7 @@ export default function AdminDashboard() {
       {activeTab === 'codes' && (
         <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-slate-800 space-y-6">
           <h3 className="font-heading font-bold text-xl text-white flex items-center gap-2">
-            <Key className="w-5 h-5 text-purple-400" /> Generated Booking Access Codes Log
+            <Key className="w-5 h-5 text-teal-400" /> Generated Booking Access Codes Log
           </h3>
 
           <div className="overflow-x-auto rounded-2xl border border-slate-700">
@@ -533,7 +533,7 @@ export default function AdminDashboard() {
       {activeTab === 'appointments' && (
         <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-slate-800 space-y-6">
           <h3 className="font-heading font-bold text-xl text-white flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-purple-400" /> Global Appointments Monitoring
+            <Calendar className="w-5 h-5 text-teal-400" /> Global Appointments Monitoring
           </h3>
 
           <div className="overflow-x-auto rounded-2xl border border-slate-700">
@@ -575,7 +575,7 @@ export default function AdminDashboard() {
       {activeTab === 'journey' && (
         <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-slate-800 space-y-6">
           <h3 className="font-heading font-bold text-xl text-white flex items-center gap-2">
-            <FlaskConical className="w-5 h-5 text-purple-400" /> Global Sample Journeys & LIMS Telemetry
+            <FlaskConical className="w-5 h-5 text-teal-400" /> Global Sample Journeys & LIMS Telemetry
           </h3>
 
           <div className="space-y-6">
@@ -609,11 +609,11 @@ export default function AdminDashboard() {
         <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-slate-800 space-y-6">
           <div className="flex items-center justify-between">
             <h3 className="font-heading font-bold text-xl text-white flex items-center gap-2">
-              <Building2 className="w-5 h-5 text-purple-400" /> Partner Hospital Facilities
+              <Building2 className="w-5 h-5 text-teal-400" /> Partner Hospital Facilities
             </h3>
             <button
               onClick={() => setIsAddHospitalOpen(true)}
-              className="btn-teal text-xs py-2 px-4 bg-purple-600 hover:bg-purple-500"
+              className="btn-teal text-xs py-2 px-4 bg-teal-600 hover:bg-teal-500"
             >
               <Plus className="w-4 h-4" /> Add Partner Hospital
             </button>
@@ -640,7 +640,7 @@ export default function AdminDashboard() {
       {activeTab === 'email' && (
         <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-slate-800 max-w-2xl mx-auto space-y-6 bg-[#111d38]">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-purple-500/20 text-purple-300 border border-purple-500/30">
+            <div className="p-2.5 rounded-xl bg-teal-500/20 text-teal-300 border border-teal-500/30">
               <Mail className="w-6 h-6" />
             </div>
             <div>
@@ -674,7 +674,7 @@ export default function AdminDashboard() {
                 id="is_enabled"
                 checked={emailForm.is_enabled}
                 onChange={(e) => setEmailForm({ ...emailForm, is_enabled: e.target.checked })}
-                className="w-4 h-4 accent-purple-500 rounded"
+                className="w-4 h-4 accent-teal-500 rounded"
               />
               <label htmlFor="is_enabled" className="font-semibold text-white cursor-pointer">
                 Enable Outbound SMTP Email Notifications
@@ -742,7 +742,7 @@ export default function AdminDashboard() {
 
             <button
               type="submit"
-              className="btn-teal text-xs w-full py-3 bg-purple-600 hover:bg-purple-500"
+              className="btn-teal text-xs w-full py-3 bg-teal-600 hover:bg-teal-500"
             >
               Save Email Configuration
             </button>
@@ -754,7 +754,7 @@ export default function AdminDashboard() {
       {activeTab === 'audit' && (
         <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-slate-800 space-y-6">
           <h3 className="font-heading font-bold text-xl text-white flex items-center gap-2">
-            <Activity className="w-5 h-5 text-purple-400" /> Immutable System Audit Trail
+            <Activity className="w-5 h-5 text-teal-400" /> Immutable System Audit Trail
           </h3>
 
           <div className="overflow-x-auto rounded-2xl border border-slate-700 max-h-[600px] overflow-y-auto">
@@ -774,7 +774,7 @@ export default function AdminDashboard() {
                     <td className="p-3 font-mono text-slate-400">{new Date(log.timestamp).toLocaleString()}</td>
                     <td className="p-3">
                       <div className="font-semibold text-white">{log.actor_name}</div>
-                      <div className="text-[10px] text-purple-300 font-mono">{log.actor_role}</div>
+                      <div className="text-[10px] text-teal-300 font-mono">{log.actor_role}</div>
                     </td>
                     <td className="p-3 font-bold text-teal-300 font-mono">{log.action}</td>
                     <td className="p-3 font-mono text-cyan-400">{log.target_type}: {log.target_id}</td>
@@ -790,7 +790,7 @@ export default function AdminDashboard() {
       {/* MODAL 1: APPROVE PATIENT & SHOW BOOKING CODE */}
       {approvalModalPatient && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
-          <div className="glass-panel w-full max-w-lg p-6 sm:p-8 rounded-2xl border border-purple-500/30 shadow-2xl relative bg-[#0b132b]">
+          <div className="glass-panel w-full max-w-lg p-6 sm:p-8 rounded-2xl border border-teal-500/30 shadow-2xl relative bg-[#0b132b]">
             
             <button
               onClick={() => {
@@ -858,7 +858,7 @@ export default function AdminDashboard() {
                   <button
                     onClick={() => handleApprovePatient(approvalModalPatient.patient_id)}
                     disabled={approving}
-                    className="btn-teal text-xs w-1/2 py-2.5 bg-purple-600 hover:bg-purple-500"
+                    className="btn-teal text-xs w-1/2 py-2.5 bg-teal-600 hover:bg-teal-500"
                   >
                     {approving ? 'Generating Code...' : 'Approve & Issue Code'}
                   </button>
@@ -971,7 +971,7 @@ export default function AdminDashboard() {
       {/* MODAL 4: ADD PARTNER HOSPITAL */}
       {isAddHospitalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
-          <div className="glass-panel w-full max-w-lg p-6 sm:p-8 rounded-2xl border border-purple-500/30 shadow-2xl relative bg-[#0b132b]">
+          <div className="glass-panel w-full max-w-lg p-6 sm:p-8 rounded-2xl border border-teal-500/30 shadow-2xl relative bg-[#0b132b]">
             <h3 className="font-heading font-bold text-xl text-white mb-4">Add Partner Hospital Facility</h3>
 
             <form onSubmit={handleAddHospital} className="space-y-4 text-xs">
@@ -1059,7 +1059,7 @@ export default function AdminDashboard() {
                 </button>
                 <button
                   type="submit"
-                  className="btn-teal text-xs w-1/2 py-2.5 bg-purple-600 hover:bg-purple-500"
+                  className="btn-teal text-xs w-1/2 py-2.5 bg-teal-600 hover:bg-teal-500"
                 >
                   Save Facility
                 </button>

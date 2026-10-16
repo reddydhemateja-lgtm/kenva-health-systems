@@ -26,9 +26,31 @@ export const AuthProvider = ({ children }) => {
     }
   }, [user]);
 
+  const parseResponse = async (res, defaultErrorMessage) => {
+    const contentType = res.headers.get('content-type') || '';
+    let data = null;
+    if (contentType.includes('application/json')) {
+      try {
+        data = await res.json();
+      } catch {
+        data = null;
+      }
+    }
+    if (!res.ok) {
+      if (data && data.error) throw new Error(data.error);
+      if (res.status === 404) {
+        throw new Error('Backend service endpoint not found (404). Please ensure the API server is connected.');
+      }
+      if (res.status >= 500) {
+        throw new Error(`Server temporarily unavailable (${res.status}). Please try again shortly.`);
+      }
+      throw new Error(defaultErrorMessage || `Request failed with status ${res.status}`);
+    }
+    return data || {};
+  };
+
   /**
-   * STEP 1: Validate credentials → sends OTP to email
-   * Returns { otpSent: true, userId, maskedEmail, message }
+   * STEP 1: Validate credentials -> sends OTP to email (or direct token for admin/hospital)
    */
   const login = async (identifier, password, expectedRole) => {
     setLoading(true);
@@ -38,14 +60,13 @@ export const AuthProvider = ({ children }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ identifier, password, expectedRole })
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Login failed');
-      // ADMIN/HOSPITAL: direct login — store token immediately
+      const data = await parseResponse(res, 'Login failed. Please check your credentials.');
+      // ADMIN/HOSPITAL: direct login - store token immediately
       if (!data.otpSent && data.token) {
         setToken(data.token);
         setUser(data.user);
       }
-      // PATIENT: otpSent:true — caller handles OTP step
+      // PATIENT: otpSent:true - caller handles OTP step
       return data;
     } finally {
       setLoading(false);
@@ -53,7 +74,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   /**
-   * STEP 2: Submit OTP → receives JWT + user profile
+   * STEP 2: Submit OTP -> receives JWT + user profile
    */
   const verifyOtp = async (userId, otp) => {
     setLoading(true);
@@ -63,8 +84,7 @@ export const AuthProvider = ({ children }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, otp })
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'OTP verification failed');
+      const data = await parseResponse(res, 'OTP verification failed');
       setToken(data.token);
       setUser(data.user);
       return data.user;
@@ -82,8 +102,7 @@ export const AuthProvider = ({ children }) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId })
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Resend failed');
+    const data = await parseResponse(res, 'Resend failed');
     return data;
   };
 
@@ -95,8 +114,7 @@ export const AuthProvider = ({ children }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Registration failed');
+      const data = await parseResponse(res, 'Registration failed');
       return data;
     } finally {
       setLoading(false);

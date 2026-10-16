@@ -23,19 +23,19 @@ export default function LandingPage({ setActiveTab, onOpenDemoModal }) {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
           
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-teal-500/10 border border-teal-500/20 text-teal-400 text-xs font-semibold uppercase tracking-wider mb-6 animate-pulse">
-            <Sparkles className="w-4 h-4" /> Next-Generation Healthcare Diagnostics Network
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-teal-500/10 border border-teal-500/20 text-teal-400 text-xs font-semibold uppercase tracking-wider mb-6">
+            <Sparkles className="w-4 h-4" /> Clinical Diagnostics & Specimen Logistics Network
           </div>
 
           <h1 className="font-heading font-extrabold text-4xl sm:text-6xl lg:text-7xl tracking-tight text-white max-w-4xl mx-auto leading-tight">
-            A Digital Nervous System <br />
-            <span className="bg-gradient-to-r from-teal-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">
-              for Modern Clinics
+            Integrated Specimen Logistics <br />
+            <span className="text-teal-400">
+              for Clinical Networks
             </span>
           </h1>
 
           <p className="mt-6 text-lg sm:text-xl text-slate-300 max-w-2xl mx-auto font-normal leading-relaxed">
-            Kenva Health Systems connects patients, diagnostic clinics, cold-chain logistics, and central reference laboratories into one unified real-time tracking nerve center.
+            Kenva Health Systems connects patients, collection facilities, cold-chain transport, and central laboratories into a verified, real-time diagnostic sample tracking system.
           </p>
 
           {/* 4 Main Action Portals Grid */}
@@ -46,7 +46,7 @@ export default function LandingPage({ setActiveTab, onOpenDemoModal }) {
               onClick={() => handlePortalClick('register')}
               className="glass-card p-6 cursor-pointer hover:border-teal-400/60 hover:bg-teal-500/10 transition-all text-left group relative overflow-hidden bg-slate-800/90 border border-slate-700/80 shadow-xl"
             >
-              <div className="w-12 h-12 rounded-xl bg-teal-500/20 text-teal-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform border border-teal-500/30">
+              <div className="w-12 h-12 rounded-xl bg-teal-500/20 text-teal-400 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform border border-teal-500/30">
                 <UserPlus className="w-6 h-6" />
               </div>
               <h3 className="font-heading font-bold text-xl text-white group-hover:text-teal-400 transition-colors">
@@ -65,7 +65,7 @@ export default function LandingPage({ setActiveTab, onOpenDemoModal }) {
               onClick={() => handlePortalClick('login')}
               className="glass-card p-6 cursor-pointer hover:border-cyan-400/60 hover:bg-cyan-500/10 transition-all text-left group relative overflow-hidden bg-slate-800/90 border border-slate-700/80 shadow-xl"
             >
-              <div className="w-12 h-12 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform border border-cyan-500/30">
+              <div className="w-12 h-12 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform border border-cyan-500/30">
                 <UserCheck className="w-6 h-6" />
               </div>
               <h3 className="font-heading font-bold text-xl text-white group-hover:text-cyan-400 transition-colors">
@@ -84,7 +84,7 @@ export default function LandingPage({ setActiveTab, onOpenDemoModal }) {
               onClick={() => handlePortalClick('login')}
               className="glass-card p-6 cursor-pointer hover:border-amber-400/60 hover:bg-amber-500/10 transition-all text-left group relative overflow-hidden bg-slate-800/90 border border-slate-700/80 shadow-xl"
             >
-              <div className="w-12 h-12 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform border border-amber-500/30">
+              <div className="w-12 h-12 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform border border-amber-500/30">
                 <Building2 className="w-6 h-6" />
               </div>
               <h3 className="font-heading font-bold text-xl text-white group-hover:text-amber-400 transition-colors">
@@ -101,18 +101,18 @@ export default function LandingPage({ setActiveTab, onOpenDemoModal }) {
             {/* 4. Admin Login */}
             <div 
               onClick={() => handlePortalClick('login')}
-              className="glass-card p-6 cursor-pointer hover:border-purple-400/60 hover:bg-purple-500/10 transition-all text-left group relative overflow-hidden bg-slate-800/90 border border-slate-700/80 shadow-xl"
+              className="glass-card p-6 cursor-pointer hover:border-teal-400/60 hover:bg-slate-700/40 transition-all text-left group relative overflow-hidden bg-slate-800/90 border border-slate-700/80 shadow-xl"
             >
-              <div className="w-12 h-12 rounded-xl bg-purple-500/20 text-purple-300 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform border border-purple-500/30">
+              <div className="w-12 h-12 rounded-xl bg-slate-700/60 text-teal-300 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform border border-slate-600">
                 <ShieldCheck className="w-6 h-6" />
               </div>
-              <h3 className="font-heading font-bold text-xl text-white group-hover:text-purple-300 transition-colors">
+              <h3 className="font-heading font-bold text-xl text-white group-hover:text-teal-300 transition-colors">
                 4. Admin Login
               </h3>
               <p className="text-xs text-slate-300 mt-2 leading-relaxed">
                 Review registrations, generate booking access codes, monitor 10 KPIs, and manage passwords.
               </p>
-              <div className="mt-4 flex items-center text-xs font-bold text-purple-300 group-hover:translate-x-1 transition-transform">
+              <div className="mt-4 flex items-center text-xs font-bold text-teal-300 group-hover:translate-x-1 transition-transform">
                 Admin Control <ArrowRight className="w-4 h-4 ml-1" />
               </div>
             </div>

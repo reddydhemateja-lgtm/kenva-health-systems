@@ -61,19 +61,36 @@ router.post('/register-patient', async (req, res) => {
       role: 'PATIENT',
       name,
       phone: phone || '',
+      is_verified: false,
       created_at: createdAt
     });
 
-    // Insert Patient Profile
+    // Insert Patient Profile (Immediately approved and booking-ready upon OTP verification)
     db.insert('patient_profiles', {
       patient_id: patientId,
       user_id: userId,
       dob,
       city,
-      approval_status: 'PENDING_APPROVAL',
-      booking_permission: 0,
-      approved_at: null,
+      approval_status: 'APPROVED',
+      booking_permission: 1,
+      approved_at: createdAt,
       rejection_reason: null
+    });
+
+    // Generate Verification OTP
+    const otp = generateOtp();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+    const otpId = 'OTP-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4);
+
+    db.delete('login_otps', o => o.user_id === userId);
+    db.insert('login_otps', {
+      id: otpId,
+      user_id: userId,
+      otp_hash: otp,
+      expires_at: expiresAt,
+      used: false,
+      role: 'PATIENT',
+      expected_role: 'PATIENT'
     });
 
     // Audit log
@@ -87,30 +104,38 @@ router.post('/register-patient', async (req, res) => {
       details: { email, city, patientId }
     });
 
-    // Notify Patient via email service if configured / in-app
-    await sendNotificationEmail({
+    // Send OTP verification email
+    const emailResult = await sendNotificationEmail({
       to: email,
-      subject: 'Kenva Health Systems — Registration Received',
-      plainText: `Hello ${name},\n\nYour registration with Kenva Health Systems is complete! Your assigned Patient ID is ${patientId}.\nYour account is currently awaiting administrator approval. Once approved, you will receive a booking access code in your portal to unlock appointment scheduling.\n\nThank you for choosing Kenva.`,
-      htmlText: `<div style="font-family: sans-serif; color: #1e293b;">
+      subject: 'Kenva Health Systems: Verify Your Email Registration',
+      plainText: `Hello ${name},\n\nYour Kenva Health Systems verification code is: ${otp}\n\nEnter this 6-digit code to activate your account and access appointment booking.\n\n— Kenva Health Systems`,
+      htmlText: `<div style="font-family: sans-serif; color: #1e293b; max-width: 500px; margin: 0 auto; padding: 24px;">
         <h2 style="color: #0d9488;">Welcome to Kenva Health Systems</h2>
         <p>Hello <strong>${name}</strong>,</p>
         <p>Your registration is complete! Your assigned Patient ID is <strong>${patientId}</strong>.</p>
-        <div style="background: #f0fdf4; border-left: 4px solid #16a34a; padding: 12px; margin: 16px 0;">
-          <strong>Account Status:</strong> Pending Administrator Approval.<br/>
-          You will receive a booking access code inside your portal once your account is reviewed.
+        <p>Please enter the verification code below to activate your account and start booking appointments:</p>
+        <div style="background: #f0fdfa; border: 2px solid #0d9488; border-radius: 8px; text-align: center; padding: 20px; margin: 20px 0;">
+          <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #0d9488; font-family: monospace;">${otp}</span>
         </div>
-        <p>Thank you for choosing Kenva Health Systems.</p>
+        <p style="color: #64748b; font-size: 12px;">This code expires in 10 minutes. Do not share it with anyone.</p>
       </div>`,
       userId,
-      type: 'ACCOUNT_REGISTRATION'
+      type: 'REGISTRATION_OTP'
     });
 
+    const smtpConfigured = emailResult && emailResult.sent;
+    const parts = email.split('@');
+    const maskedEmail = parts[0][0] + '*'.repeat(Math.max(parts[0].length - 1, 4)) + '@' + parts[1];
+
     return res.status(201).json({
-      message: 'Registration successful! Account is awaiting administrator approval.',
+      message: 'Registration successful. Please enter the 6-digit OTP code to verify your email.',
       patientId,
-      status: 'PENDING_APPROVAL',
-      notice: 'Your account is awaiting administrator approval. You will receive a booking access code after approval.'
+      userId,
+      email,
+      maskedEmail,
+      demoOtp: smtpConfigured ? undefined : otp,
+      smtpConfigured: !!smtpConfigured,
+      status: 'VERIFICATION_REQUIRED'
     });
   } catch (err) {
     console.error('Registration error:', err);
@@ -231,7 +256,7 @@ router.post('/login', async (req, res) => {
       htmlText: `
         <div style="font-family: 'Segoe UI', sans-serif; max-width: 480px; margin: 0 auto; background: #0b132b; color: #f8fafc; border-radius: 16px; padding: 32px;">
           <div style="text-align:center; margin-bottom: 24px;">
-            <div style="display:inline-block; background:#14b8a6; border-radius:12px; padding:10px 16px; font-size:20px; font-weight:700; letter-spacing:1px; color:#fff;">⚕ KENVA HEALTH</div>
+            <div style="display:inline-block; background:#14b8a6; border-radius:12px; padding:10px 16px; font-size:20px; font-weight:700; letter-spacing:1px; color:#fff;">KENVA HEALTH</div>
           </div>
           <h2 style="color:#2dd4bf; font-size:22px; margin-bottom:8px;">Your Login Verification Code</h2>
           <p style="color:#cbd5e1; margin-bottom:20px;">Hello <strong>${user.name}</strong>, enter this code to complete your login:</p>
@@ -249,18 +274,15 @@ router.post('/login', async (req, res) => {
     const smtpConfigured = emailResult && emailResult.sent;
     console.log(`[AUTH] Patient OTP for ${user.email}: ${otp} (SMTP sent: ${smtpConfigured})`);
 
-    if (!smtpConfigured) {
-      return res.status(503).json({
-        error: 'Email service is not configured. Please ask your administrator to set up SMTP in Admin Dashboard → Email Settings so your OTP can be delivered.'
-      });
-    }
-
     return res.json({
       otpSent: true,
       maskedEmail,
       email: user.email,
       userId: user.id,
-      message: `A 6-digit verification code has been sent to ${maskedEmail}. It expires in 10 minutes.`
+      demoOtp: smtpConfigured ? undefined : otp,
+      message: smtpConfigured
+        ? `A 6-digit verification code has been sent to ${maskedEmail}. It expires in 10 minutes.`
+        : `Email service is in local demo mode. Verification code: ${otp}`
     });
   } catch (err) {
     console.error('Login Step 1 error:', err);
@@ -322,6 +344,25 @@ router.post('/verify-otp', async (req, res) => {
       details: { role: user.role }
     });
 
+    const wasUnverified = !user.is_verified;
+    db.update('users', u => u.id === userId, { is_verified: true });
+
+    if (wasUnverified) {
+      await sendNotificationEmail({
+        to: user.email,
+        subject: 'Kenva Health Systems: Registration & Verification Complete',
+        plainText: `Hello ${user.name},\n\nYour registration and email verification with Kenva Health Systems is complete! Your account is active and you can now log in and book diagnostic appointments.\n\nThank you for choosing Kenva.`,
+        htmlText: `<div style="font-family: sans-serif; color: #1e293b; max-width: 500px; margin: 0 auto; padding: 24px;">
+          <h2 style="color: #0d9488;">Registration & Verification Complete</h2>
+          <p>Hello <strong>${user.name}</strong>,</p>
+          <p>Your email has been successfully verified! Your Kenva Health account is fully active.</p>
+          <p>You can now book diagnostic appointments directly with any accredited partner facility.</p>
+        </div>`,
+        userId: user.id,
+        type: 'ACCOUNT_VERIFIED'
+      });
+    }
+
     return res.json({
       token,
       user: {
@@ -381,12 +422,134 @@ router.post('/resend-otp', async (req, res) => {
       userId: user.id,
       type: 'LOGIN_OTP_RESEND'
     });
+    const smtpConfigured = emailResult && emailResult.sent;
     const parts = user.email.split('@');
     const maskedEmail = parts[0][0] + '*'.repeat(Math.max(parts[0].length - 1, 4)) + '@' + parts[1];
-    return res.json({ otpSent: true, maskedEmail, message: 'A new code has been sent to your email.' });
+    return res.json({
+      otpSent: true,
+      maskedEmail,
+      demoOtp: smtpConfigured ? undefined : otp,
+      message: 'A new code has been sent to your email.'
+    });
   } catch (err) {
     console.error('Resend OTP error:', err);
     return res.status(500).json({ error: 'Server error resending OTP.' });
+  }
+});
+
+/**
+ * POST /api/auth/forgot-password
+ * Request a password reset code
+ */
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email address is required.' });
+
+    const user = db.findOne('users', u => u.email.toLowerCase() === email.trim().toLowerCase());
+    if (!user) {
+      // Do not disclose user existence
+      return res.json({ message: 'If an account exists with this email, a reset code has been sent.' });
+    }
+
+    const otp = generateOtp();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+    const otpId = 'OTP-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4);
+
+    db.delete('login_otps', o => o.user_id === user.id);
+    db.insert('login_otps', {
+      id: otpId,
+      user_id: user.id,
+      otp_hash: otp,
+      expires_at: expiresAt,
+      used: false,
+      role: user.role
+    });
+
+    const emailResult = await sendNotificationEmail({
+      to: user.email,
+      subject: 'Kenva Health Systems: Password Reset Code',
+      plainText: `Hello ${user.name},\n\nYour password reset code is: ${otp}\n\nExpires in 10 minutes. Do not share this code.`,
+      htmlText: `<div style="font-family: sans-serif; color: #1e293b; max-width: 500px; margin: 0 auto; padding: 24px;">
+        <h2 style="color: #0d9488;">Password Reset Request</h2>
+        <p>Hello <strong>${user.name}</strong>,</p>
+        <p>Use the code below to reset your password:</p>
+        <div style="background: #f0fdfa; border: 2px solid #0d9488; border-radius: 8px; text-align: center; padding: 20px; margin: 20px 0;">
+          <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #0d9488; font-family: monospace;">${otp}</span>
+        </div>
+        <p style="color: #64748b; font-size: 12px;">This code expires in 10 minutes.</p>
+      </div>`,
+      userId: user.id,
+      type: 'PASSWORD_RESET_OTP'
+    });
+
+    const smtpConfigured = emailResult && emailResult.sent;
+    const parts = user.email.split('@');
+    const maskedEmail = parts[0][0] + '*'.repeat(Math.max(parts[0].length - 1, 4)) + '@' + parts[1];
+
+    return res.json({
+      otpSent: true,
+      userId: user.id,
+      maskedEmail,
+      demoOtp: smtpConfigured ? undefined : otp,
+      message: 'If an account exists with this email, a reset code has been sent.'
+    });
+  } catch (err) {
+    console.error('Forgot password error:', err);
+    return res.status(500).json({ error: 'Server error processing password reset.' });
+  }
+});
+
+/**
+ * POST /api/auth/reset-password
+ * Reset password using OTP
+ */
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { userId, otp, newPassword } = req.body;
+    if (!userId || !otp || !newPassword) {
+      return res.status(400).json({ error: 'User ID, OTP code, and new password are required.' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters long.' });
+    }
+
+    const otpRecord = db.findOne('login_otps', o => o.user_id === userId && !o.used);
+    if (!otpRecord) {
+      return res.status(401).json({ error: 'Invalid or expired reset code. Please request a new one.' });
+    }
+
+    if (new Date() > new Date(otpRecord.expires_at)) {
+      db.delete('login_otps', o => o.id === otpRecord.id);
+      return res.status(401).json({ error: 'Reset code has expired. Please request a new one.' });
+    }
+
+    if (otpRecord.otp_hash !== otp.trim()) {
+      return res.status(401).json({ error: 'Invalid reset code. Please check and try again.' });
+    }
+
+    db.update('login_otps', o => o.id === otpRecord.id, { used: true });
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    db.update('users', u => u.id === userId, { password: hashedPassword });
+
+    const user = db.findOne('users', u => u.id === userId);
+
+    db.logAudit({
+      actor_id: userId,
+      actor_name: user ? user.name : 'User',
+      actor_role: user ? user.role : 'PATIENT',
+      action: 'USER_PASSWORD_RESET',
+      target_type: 'USER',
+      target_id: userId,
+      details: { email: user ? user.email : '' }
+    });
+
+    return res.json({ message: 'Password updated successfully. You can now log in with your new password.' });
+  } catch (err) {
+    console.error('Reset password error:', err);
+    return res.status(500).json({ error: 'Server error updating password.' });
   }
 });
 

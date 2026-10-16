@@ -10,6 +10,8 @@ import LoginPage from './pages/LoginPage';
 import PatientDashboard from './pages/PatientDashboard';
 import HospitalDashboard from './pages/HospitalDashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import TermsConditionsPage from './pages/TermsConditionsPage';
 
 function MainApp() {
   const { user } = useAuth();
@@ -48,6 +50,12 @@ function MainApp() {
             onOpenDemoModal={() => setIsDemoModalOpen(true)} 
           />
         );
+
+      case 'privacy':
+        return <PrivacyPolicyPage setActiveTab={setActiveTab} />;
+
+      case 'terms':
+        return <TermsConditionsPage setActiveTab={setActiveTab} />;
 
       case 'patient-dashboard':
         if (!user || user.role !== 'PATIENT') {

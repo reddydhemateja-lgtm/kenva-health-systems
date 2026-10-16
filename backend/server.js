@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -50,12 +51,54 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/patient', patientRoutes);
 app.use('/api/hospital', hospitalRoutes);
 
+// ─── Real-Time Live Sync SSE Stream ─────────────────────────────────────────
+const sseClients = new Set();
+
+app.get('/api/events', (req, res) => {
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache, no-transform',
+    'Connection': 'keep-alive',
+    'Access-Control-Allow-Origin': '*'
+  });
+  if (res.flushHeaders) res.flushHeaders();
+
+  res.write(`data: ${JSON.stringify({ type: 'CONNECTED', timestamp: new Date().toISOString() })}\n\n`);
+  sseClients.add(res);
+
+  req.on('close', () => {
+    sseClients.delete(res);
+  });
+});
+
+db.events.on('change', (change) => {
+  const payload = `data: ${JSON.stringify({ type: 'DATABASE_CHANGE', ...change })}\n\n`;
+  for (const client of sseClients) {
+    try {
+      client.write(payload);
+    } catch {
+      sseClients.delete(client);
+    }
+  }
+});
+
+setInterval(() => {
+  for (const client of sseClients) {
+    try {
+      client.write(':keepalive\n\n');
+    } catch {
+      sseClients.delete(client);
+    }
+  }
+}, 15000);
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'online',
     system: 'Kenva Health Systems Core API',
     tagline: 'A Digital Nervous System for Modern Clinics',
+    active_stream_connections: sseClients.size,
     timestamp: new Date().toISOString()
   });
 });

@@ -97,13 +97,27 @@ export default function Footer({ setActiveTab }) {
           </div>
         </div>
 
-        {/* Footer Copyright */}
+        {/* Footer Copyright and Legal */}
         <div className="pt-8 border-t border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-400">
           <div>
-            Kenva Health Systems — Clinical Diagnostic Coordination & Sample Tracking Platform.
+            Kenva Health Systems: Clinical Diagnostic Coordination & Sample Tracking Platform.
           </div>
-          <div className="text-slate-500">
-            © {new Date().getFullYear()} Kenva Health Systems Inc. All rights reserved.
+          <div className="flex items-center gap-6">
+            <button
+              onClick={() => setActiveTab('privacy')}
+              className="text-slate-400 hover:text-teal-400 transition-colors"
+            >
+              Privacy Policy
+            </button>
+            <button
+              onClick={() => setActiveTab('terms')}
+              className="text-slate-400 hover:text-teal-400 transition-colors"
+            >
+              Terms & Conditions
+            </button>
+            <span className="text-slate-500">
+              © {new Date().getFullYear()} Kenva Health Systems Inc. All rights reserved.
+            </span>
           </div>
         </div>
       </div>

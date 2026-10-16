@@ -9,6 +9,23 @@ router.use(authenticateToken);
 router.use(requireRole(['HOSPITAL', 'ADMIN']));
 
 /**
+ * Stage definitions for the 11-stage workflow
+ */
+const STAGES = {
+  1: { num: 1, name: 'Appointment Requested', label: 'Requested', code: 'APPOINTMENT_REQUESTED' },
+  2: { num: 2, name: 'Appointment Confirmed', label: 'Confirmed', code: 'APPOINTMENT_CONFIRMED' },
+  3: { num: 3, name: 'Sample Collection Scheduled', label: 'Collection Scheduled', code: 'COLLECTION_SCHEDULED' },
+  4: { num: 4, name: 'Sample Collector Assigned', label: 'Collector Assigned', code: 'COLLECTOR_ASSIGNED' },
+  5: { num: 5, name: 'Sample Collected', label: 'Sample Collected', code: 'SAMPLE_COLLECTED' },
+  6: { num: 6, name: 'Sample Picked Up for Transportation', label: 'Logistics Pickup', code: 'LOGISTICS_PICKUP' },
+  7: { num: 7, name: 'Sample in Transit', label: 'In Transit', code: 'IN_TRANSIT' },
+  8: { num: 8, name: 'Sample Received by Laboratory', label: 'Laboratory Received', code: 'LAB_RECEIVED' },
+  9: { num: 9, name: 'Testing in Progress', label: 'Testing in Progress', code: 'TESTING_IN_PROGRESS' },
+  10: { num: 10, name: 'Report Ready', label: 'Report Ready', code: 'REPORT_READY' },
+  11: { num: 11, name: 'Report Available to Patient', label: 'Report Available', code: 'REPORT_AVAILABLE' }
+};
+
+/**
  * Get Hospital Staff Context
  */
 function getHospitalContext(req) {
@@ -21,7 +38,7 @@ function getHospitalContext(req) {
 
 /**
  * GET /api/hospital/dashboard
- * Hospital stats, assigned appointments, patient records, test orders, samples
+ * Hospital stats, assigned appointments, patient records, test orders, samples, and reports
  */
 router.get('/dashboard', (req, res) => {
   const ctx = getHospitalContext(req);
@@ -32,7 +49,7 @@ router.get('/dashboard', (req, res) => {
   }
 
   const hospital = hospitalId ? db.findOne('hospitals', h => h.id === hospitalId) : null;
-  
+
   // Filter records strictly by hospitalId for hospital staff
   const appointments = hospitalId 
     ? db.find('appointments', a => a.hospital_id === hospitalId)
@@ -52,21 +69,28 @@ router.get('/dashboard', (req, res) => {
 
   const patientProfiles = db.find('patient_profiles');
   const users = db.find('users');
-  const logistics = db.find('logistics_events');
-  const labRecords = db.find('laboratory_records');
   const timelines = db.find('sample_workflow_timeline');
 
   // Enriched Appointments
   const enrichedAppointments = appointments.map(apt => {
     const profile = patientProfiles.find(p => p.patient_id === apt.patient_id);
     const patientUser = profile ? users.find(u => u.id === profile.user_id) : null;
+    const order = testOrders.find(o => o.appointment_id === apt.appointment_id);
+    const sample = order ? samples.find(s => s.order_id === order.order_id) : samples.find(s => s.appointment_id === apt.appointment_id);
+    const orderTimeline = sample
+      ? timelines.filter(t => t.sample_id === sample.sample_id).sort((a, b) => a.stage_number - b.stage_number)
+      : timelines.filter(t => t.appointment_id === apt.appointment_id).sort((a, b) => a.stage_number - b.stage_number);
+
     return {
       ...apt,
       patientName: patientUser ? patientUser.name : 'Unknown Patient',
       patientEmail: patientUser ? patientUser.email : '',
       patientPhone: patientUser ? patientUser.phone : '',
       patientDob: profile ? profile.dob : '',
-      patientCity: profile ? profile.city : ''
+      patientCity: profile ? profile.city : '',
+      order: order || null,
+      sample: sample || null,
+      timeline: orderTimeline
     };
   });
 
@@ -76,7 +100,7 @@ router.get('/dashboard', (req, res) => {
     const patientUser = profile ? users.find(u => u.id === profile.user_id) : null;
     const sample = samples.find(s => s.order_id === order.order_id);
     const report = reports.find(r => r.order_id === order.order_id);
-    const orderTimeline = sample ? timelines.filter(t => t.sample_id === sample.sample_id).sort((a,b) => a.stage_number - b.stage_number) : [];
+    const orderTimeline = sample ? timelines.filter(t => t.sample_id === sample.sample_id).sort((a, b) => a.stage_number - b.stage_number) : [];
 
     return {
       ...order,
@@ -97,8 +121,8 @@ router.get('/dashboard', (req, res) => {
       activeSamples: samples.length,
       reportsGenerated: reports.length
     },
-    appointments: enrichedAppointments,
-    testOrders: enrichedOrders,
+    appointments: enrichedAppointments.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)),
+    testOrders: enrichedOrders.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)),
     samples,
     reports
   });
@@ -106,28 +130,52 @@ router.get('/dashboard', (req, res) => {
 
 /**
  * POST /api/hospital/appointments/:appointmentId/status
+ * Confirm, reschedule, or cancel appointment (Stage 2)
  */
 router.post('/appointments/:appointmentId/status', async (req, res) => {
   const ctx = getHospitalContext(req);
   const { appointmentId } = req.params;
-  const { status, notes } = req.body;
+  const { status, notes, rescheduled_date, rescheduled_time } = req.body;
 
   const apt = db.findOne('appointments', a => a.appointment_id === appointmentId);
   if (!apt) {
     return res.status(404).json({ error: 'Appointment not found.' });
   }
 
-  // Hospital staff scope check
   if (!ctx.isGlobalAdmin && apt.hospital_id !== ctx.hospitalId) {
-    return res.status(403).json({ error: 'Access denied. Appointment belongs to a different hospital.' });
+    return res.status(403).json({ error: 'Access denied. Appointment belongs to another hospital.' });
   }
 
   const updatedAt = new Date().toISOString();
-  db.update('appointments', a => a.appointment_id === appointmentId, {
+  const updatePayload = {
     status,
     notes: notes || apt.notes,
     updated_at: updatedAt
-  });
+  };
+
+  if (rescheduled_date) updatePayload.preferred_date = rescheduled_date;
+  if (rescheduled_time) updatePayload.preferred_time = rescheduled_time;
+
+  db.update('appointments', a => a.appointment_id === appointmentId, updatePayload);
+
+  const hospital = db.findOne('hospitals', h => h.id === apt.hospital_id);
+  const hospitalName = hospital ? hospital.name : 'Hospital Facility';
+
+  // Add Stage 2 timeline event when confirmed
+  if (status === 'CONFIRMED') {
+    db.insert('sample_workflow_timeline', {
+      id: 'TL-' + Date.now() + '-2',
+      appointment_id: appointmentId,
+      sample_id: null,
+      stage_number: 2,
+      stage_name: 'Appointment Confirmed',
+      actor_name: req.user.name,
+      actor_role: 'Hospital Staff',
+      location: hospitalName,
+      timestamp: updatedAt,
+      notes: notes || `Appointment confirmed for ${updatePayload.preferred_date || apt.preferred_date} at ${updatePayload.preferred_time || apt.preferred_time}.`
+    });
+  }
 
   db.logAudit({
     actor_id: req.user.id,
@@ -144,40 +192,580 @@ router.post('/appointments/:appointmentId/status', async (req, res) => {
   if (profile) {
     const user = db.findOne('users', u => u.id === profile.user_id);
     if (user) {
+      db.notifyUser({
+        user_id: user.id,
+        title: `Appointment ${status === 'CONFIRMED' ? 'Confirmed' : status === 'RESCHEDULED' ? 'Rescheduled' : 'Cancelled'}`,
+        message: `Your appointment (${appointmentId}) at ${hospitalName} is now ${status}. ${notes || ''}`,
+        type: 'APPOINTMENT_STATUS_CHANGE'
+      });
+
       await sendNotificationEmail({
         to: user.email,
-        subject: `Kenva Health — Appointment ${status}`,
-        plainText: `Hello ${user.name},\n\nYour appointment (${appointmentId}) status at ${req.user.hospitalName || 'the hospital'} is now: ${status}.`,
-        htmlText: `<p>Hello <strong>${user.name}</strong>,</p><p>Your appointment (${appointmentId}) status has been updated to <strong>${status}</strong>.</p>`,
+        subject: `Kenva Health Systems: Appointment ${status} (${appointmentId})`,
+        plainText: `Hello ${user.name},\n\nYour appointment (${appointmentId}) at ${hospitalName} has been ${status}.\n${notes ? `Notes: ${notes}\n` : ''}\n— Kenva Health Systems`,
+        htmlText: `<div style="font-family: sans-serif; color: #1e293b; max-width: 500px; padding: 20px;">
+          <h2 style="color: #0d9488;">Appointment Status: ${status}</h2>
+          <p>Hello <strong>${user.name}</strong>,</p>
+          <p>Your appointment <strong>${appointmentId}</strong> has been updated to <strong>${status}</strong>.</p>
+          ${notes ? `<p style="background:#f1f5f9; padding: 10px; border-radius: 6px;">${notes}</p>` : ''}
+        </div>`,
         userId: user.id,
         type: 'APPOINTMENT_STATUS_CHANGE'
       });
     }
   }
 
+  // Broadcast real-time change to live clients
+  db.broadcastChange({
+    event: 'APPOINTMENT_STATUS_UPDATED',
+    appointmentId,
+    status,
+    patientId: apt.patient_id
+  });
+
   return res.json({ message: `Appointment status updated to ${status}.`, appointmentId });
 });
 
 /**
+ * POST /api/hospital/appointments/:appointmentId/schedule-collection
+ * Stage 3: Schedule Sample Collection
+ */
+router.post('/appointments/:appointmentId/schedule-collection', async (req, res) => {
+  const ctx = getHospitalContext(req);
+  const { appointmentId } = req.params;
+  const { scheduled_date, scheduled_time, collection_location, instructions } = req.body;
+
+  const apt = db.findOne('appointments', a => a.appointment_id === appointmentId);
+  if (!apt) return res.status(404).json({ error: 'Appointment not found.' });
+
+  if (!ctx.isGlobalAdmin && apt.hospital_id !== ctx.hospitalId) {
+    return res.status(403).json({ error: 'Access denied. Appointment belongs to another facility.' });
+  }
+
+  const now = new Date().toISOString();
+  const hospital = db.findOne('hospitals', h => h.id === apt.hospital_id);
+  const hospitalName = hospital ? hospital.name : 'Hospital Facility';
+
+  const scheduledInfo = {
+    date: scheduled_date || apt.preferred_date,
+    time: scheduled_time || apt.preferred_time,
+    location: collection_location || `${hospitalName} - Specimen Collection Center`,
+    instructions: instructions || 'Fasting 8-10 hours recommended before sample collection.'
+  };
+
+  db.update('appointments', a => a.appointment_id === appointmentId, {
+    status: 'COLLECTION_SCHEDULED',
+    scheduled_collection: scheduledInfo,
+    updated_at: now
+  });
+
+  // Timeline Stage 3
+  db.insert('sample_workflow_timeline', {
+    id: 'TL-' + Date.now() + '-3',
+    appointment_id: appointmentId,
+    sample_id: null,
+    stage_number: 3,
+    stage_name: 'Sample Collection Scheduled',
+    actor_name: req.user.name,
+    actor_role: 'Clinical Operations',
+    location: scheduledInfo.location,
+    timestamp: now,
+    notes: `Collection scheduled for ${scheduledInfo.date} at ${scheduledInfo.time}. ${scheduledInfo.instructions}`
+  });
+
+  // Notify patient
+  const profile = db.findOne('patient_profiles', p => p.patient_id === apt.patient_id);
+  if (profile) {
+    const user = db.findOne('users', u => u.id === profile.user_id);
+    if (user) {
+      db.notifyUser({
+        user_id: user.id,
+        title: 'Sample Collection Scheduled',
+        message: `Your sample collection is scheduled for ${scheduledInfo.date} at ${scheduledInfo.time} at ${scheduledInfo.location}.`,
+        type: 'COLLECTION_SCHEDULED'
+      });
+    }
+  }
+
+  db.broadcastChange({
+    event: 'WORKFLOW_STAGE_UPDATED',
+    appointmentId,
+    stage: 3,
+    stage_name: 'Sample Collection Scheduled',
+    patientId: apt.patient_id
+  });
+
+  return res.json({ message: 'Sample collection scheduled successfully.', scheduledInfo });
+});
+
+/**
+ * POST /api/hospital/appointments/:appointmentId/assign-collector
+ * Stage 4: Assign Sample Collector (name, role, contact phone)
+ */
+router.post('/appointments/:appointmentId/assign-collector', async (req, res) => {
+  const ctx = getHospitalContext(req);
+  const { appointmentId } = req.params;
+  const { collector_name, collector_role, collector_phone } = req.body;
+
+  if (!collector_name) {
+    return res.status(400).json({ error: 'Collector name is required.' });
+  }
+
+  const apt = db.findOne('appointments', a => a.appointment_id === appointmentId);
+  if (!apt) return res.status(404).json({ error: 'Appointment not found.' });
+
+  if (!ctx.isGlobalAdmin && apt.hospital_id !== ctx.hospitalId) {
+    return res.status(403).json({ error: 'Access denied. Appointment belongs to another facility.' });
+  }
+
+  const now = new Date().toISOString();
+  const hospital = db.findOne('hospitals', h => h.id === apt.hospital_id);
+  const hospitalName = hospital ? hospital.name : 'Hospital Facility';
+
+  const collectorInfo = {
+    name: collector_name.trim(),
+    role: collector_role ? collector_role.trim() : 'Certified Phlebotomist',
+    phone: collector_phone ? collector_phone.trim() : '+91 94411 22334',
+    assigned_at: now
+  };
+
+  db.update('appointments', a => a.appointment_id === appointmentId, {
+    status: 'COLLECTOR_ASSIGNED',
+    collector_info: collectorInfo,
+    updated_at: now
+  });
+
+  // Timeline Stage 4
+  db.insert('sample_workflow_timeline', {
+    id: 'TL-' + Date.now() + '-4',
+    appointment_id: appointmentId,
+    sample_id: null,
+    stage_number: 4,
+    stage_name: 'Sample Collector Assigned',
+    actor_name: req.user.name,
+    actor_role: 'Hospital Coordinator',
+    location: hospitalName,
+    timestamp: now,
+    notes: `Assigned specimen collector: ${collectorInfo.name} (${collectorInfo.role}, Contact: ${collectorInfo.phone})`
+  });
+
+  // Notify patient
+  const profile = db.findOne('patient_profiles', p => p.patient_id === apt.patient_id);
+  if (profile) {
+    const user = db.findOne('users', u => u.id === profile.user_id);
+    if (user) {
+      db.notifyUser({
+        user_id: user.id,
+        title: 'Sample Collector Assigned',
+        message: `Your sample collector is ${collectorInfo.name} (${collectorInfo.role}). Contact: ${collectorInfo.phone}.`,
+        type: 'COLLECTOR_ASSIGNED'
+      });
+    }
+  }
+
+  db.broadcastChange({
+    event: 'WORKFLOW_STAGE_UPDATED',
+    appointmentId,
+    stage: 4,
+    stage_name: 'Sample Collector Assigned',
+    collector_info: collectorInfo,
+    patientId: apt.patient_id
+  });
+
+  return res.json({ message: 'Sample collector assigned successfully.', collectorInfo });
+});
+
+/**
+ * POST /api/hospital/samples
+ * Stage 5: Collect & Register Sample
+ */
+router.post('/samples', (req, res) => {
+  const ctx = getHospitalContext(req);
+  const { appointment_id, sample_type, container_id, collected_by } = req.body;
+
+  if (!appointment_id) {
+    return res.status(400).json({ error: 'Appointment ID is required.' });
+  }
+
+  const apt = db.findOne('appointments', a => a.appointment_id === appointment_id);
+  if (!apt) {
+    return res.status(404).json({ error: 'Appointment not found.' });
+  }
+
+  if (!ctx.isGlobalAdmin && apt.hospital_id !== ctx.hospitalId) {
+    return res.status(403).json({ error: 'Access denied. Appointment belongs to another facility.' });
+  }
+
+  const sampleId = 'SMP-' + Math.floor(10000 + Math.random() * 90000);
+  const orderId = 'ORD-' + Math.floor(1000 + Math.random() * 9000);
+  const now = new Date().toISOString();
+  const hospital = db.findOne('hospitals', h => h.id === apt.hospital_id);
+  const hospitalName = hospital ? hospital.name : 'Hospital Facility';
+
+  const collectorName = collected_by || (apt.collector_info ? apt.collector_info.name : req.user.name);
+  const finalContainerId = container_id || `KEN-BC-${Math.floor(10000 + Math.random() * 90000)}`;
+  const finalSampleType = sample_type || 'Venous Whole Blood (EDTA)';
+
+  // Insert Test Order
+  const newOrder = {
+    order_id: orderId,
+    appointment_id: apt.appointment_id,
+    patient_id: apt.patient_id,
+    hospital_id: apt.hospital_id,
+    test_type: apt.test_type || 'Diagnostic Panel',
+    ordering_physician: req.user.name,
+    urgency: 'ROUTINE',
+    status: 'SAMPLE_COLLECTED',
+    notes: apt.notes || '',
+    created_at: now
+  };
+  db.insert('test_orders', newOrder);
+
+  // Insert Sample Record (Stage 5)
+  const newSample = {
+    sample_id: sampleId,
+    order_id: orderId,
+    appointment_id: apt.appointment_id,
+    patient_id: apt.patient_id,
+    hospital_id: apt.hospital_id,
+    sample_type: finalSampleType,
+    container_id: finalContainerId,
+    collected_at: now,
+    collected_by: collectorName,
+    current_workflow_stage: 5,
+    status_label: 'Sample Collected',
+    created_at: now
+  };
+  db.insert('samples', newSample);
+
+  // Update appointment status
+  db.update('appointments', a => a.appointment_id === appointment_id, {
+    status: 'SAMPLE_COLLECTED',
+    updated_at: now
+  });
+
+  // Re-link previous timeline events for this appointment to the new sample_id
+  db.update('sample_workflow_timeline', t => t.appointment_id === appointment_id, {
+    sample_id: sampleId
+  });
+
+  // Insert Stage 5 Timeline event
+  db.insert('sample_workflow_timeline', {
+    id: 'TL-' + Date.now() + '-5',
+    appointment_id: appointment_id,
+    sample_id: sampleId,
+    stage_number: 5,
+    stage_name: 'Sample Collected',
+    actor_name: collectorName,
+    actor_role: 'Phlebotomist / Collector',
+    location: `${hospitalName} Specimen Collection`,
+    timestamp: now,
+    notes: `${finalSampleType} collected in barcoded container ${finalContainerId}. Unique Sample ID: ${sampleId}`
+  });
+
+  // Notify patient
+  const profile = db.findOne('patient_profiles', p => p.patient_id === apt.patient_id);
+  if (profile) {
+    const user = db.findOne('users', u => u.id === profile.user_id);
+    if (user) {
+      db.notifyUser({
+        user_id: user.id,
+        title: 'Specimen Collected',
+        message: `Your sample (${sampleId}) has been collected by ${collectorName}. Barcode registered: ${finalContainerId}.`,
+        type: 'SAMPLE_COLLECTED'
+      });
+    }
+  }
+
+  db.broadcastChange({
+    event: 'WORKFLOW_STAGE_UPDATED',
+    appointmentId: apt.appointment_id,
+    sampleId,
+    stage: 5,
+    stage_name: 'Sample Collected',
+    patientId: apt.patient_id
+  });
+
+  return res.status(201).json({
+    message: 'Sample collected and registered successfully.',
+    sample: newSample,
+    order: newOrder
+  });
+});
+
+/**
+ * POST /api/hospital/samples/:sampleId/advance-workflow
+ * Advance sample across stages 6 to 11
+ */
+router.post('/samples/:sampleId/advance-workflow', async (req, res) => {
+  const ctx = getHospitalContext(req);
+  const { sampleId } = req.params;
+  const {
+    nextStage,
+    notes,
+    courier_name,
+    tracking_number,
+    temp_celsius,
+    receiving_tech,
+    analyzer_model,
+    lab_tech,
+    summary_findings,
+    test_results_json
+  } = req.body;
+
+  const sample = db.findOne('samples', s => s.sample_id === sampleId);
+  if (!sample) return res.status(404).json({ error: 'Sample record not found.' });
+
+  if (!ctx.isGlobalAdmin && sample.hospital_id !== ctx.hospitalId) {
+    return res.status(403).json({ error: 'Access denied. Sample belongs to another facility.' });
+  }
+
+  const stageNum = parseInt(nextStage, 10);
+  if (isNaN(stageNum) || stageNum < 6 || stageNum > 11) {
+    return res.status(400).json({ error: 'Stage number must be between 6 and 11.' });
+  }
+
+  const stageMeta = STAGES[stageNum];
+  const now = new Date().toISOString();
+  const hospital = db.findOne('hospitals', h => h.id === sample.hospital_id);
+  const hospitalName = hospital ? hospital.name : 'Hospital Facility';
+
+  // Specific stage handling & metadata
+  let actorName = req.user.name;
+  let actorRole = 'Hospital Staff';
+  let location = hospitalName;
+  let stageNotes = notes || '';
+
+  if (stageNum === 6) {
+    // Stage 6: Logistics Pickup
+    actorName = courier_name || 'Kenva ColdChain Express';
+    actorRole = 'Certified Logistics Courier';
+    location = `${hospitalName} Dispatch Bay`;
+    stageNotes = `Sample dispatched under temperature control. Tracking: ${tracking_number || 'TRK-' + Math.floor(100000 + Math.random() * 900000)}`;
+  } else if (stageNum === 7) {
+    // Stage 7: In Transit
+    actorName = courier_name || 'Kenva ColdChain Express';
+    actorRole = 'Logistics Transport';
+    location = 'En Route (Air Bypass Road - Central Lab Corridor)';
+    const temp = temp_celsius !== undefined ? `${temp_celsius}°C` : '3.6°C';
+    stageNotes = `Sample in transit. Active telemetry: ${temp} (within target range 2.0°C - 6.0°C).`;
+  } else if (stageNum === 8) {
+    // Stage 8: Laboratory Received
+    actorName = receiving_tech || 'Receiving Tech P. Vani';
+    actorRole = 'Intake Laboratory Specialist';
+    location = 'Kenva Central Reference Laboratory (Tirupati)';
+    stageNotes = `Specimen arrived at laboratory. Container barcode verified intact at ${temp_celsius || '3.5'}°C.`;
+  } else if (stageNum === 9) {
+    // Stage 9: Testing in Progress
+    actorName = lab_tech || 'Dr. K. Saroja, MD';
+    actorRole = 'Endocrinology / Pathology Specialist';
+    location = 'Kenva Central Reference Laboratory (Tirupati)';
+    stageNotes = `Testing underway using ${analyzer_model || 'Automated Hematology Analyzer Sysmex XN-1000'}.`;
+  } else if (stageNum === 10) {
+    // Stage 10: Report Ready
+    actorName = lab_tech || 'Dr. K. Saroja, MD';
+    actorRole = 'Senior Pathologist';
+    location = 'Kenva Central Reference Laboratory (Tirupati)';
+    stageNotes = `Diagnostic findings verified and digitally approved by pathologist. ${summary_findings || ''}`;
+  } else if (stageNum === 11) {
+    // Stage 11: Report Available to Patient
+    actorName = 'Kenva Core System';
+    actorRole = 'Report Delivery Service';
+    location = 'Kenva Health Secure Portal';
+    stageNotes = 'Final cryptographically signed PDF diagnostic report published to Patient Portal.';
+
+    // Publish Report Record
+    const order = db.findOne('test_orders', o => o.order_id === sample.order_id);
+    const reportId = 'REP-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000);
+    const existingReport = db.findOne('reports', r => r.sample_id === sampleId);
+
+    if (!existingReport) {
+      const defaultResults = test_results_json || [
+        { parameter: 'Hemoglobin', value: '14.2', unit: 'g/dL', reference: '13.0 - 17.0', status: 'NORMAL' },
+        { parameter: 'Total WBC Count', value: '6,800', unit: '/mcL', reference: '4,500 - 11,000', status: 'NORMAL' },
+        { parameter: 'Platelet Count', value: '240,000', unit: '/mcL', reference: '150,000 - 450,000', status: 'NORMAL' },
+        { parameter: 'RBC Count', value: '4.85', unit: 'million/mcL', reference: '4.5 - 5.9', status: 'NORMAL' },
+        { parameter: 'Neutrophils', value: '62', unit: '%', reference: '40 - 70', status: 'NORMAL' },
+        { parameter: 'Lymphocytes', value: '30', unit: '%', reference: '20 - 40', status: 'NORMAL' }
+      ];
+
+      db.insert('reports', {
+        id: reportId,
+        report_id: reportId,
+        order_id: sample.order_id,
+        sample_id: sample.sample_id,
+        patient_id: sample.patient_id,
+        hospital_id: sample.hospital_id,
+        hospital_name: hospitalName,
+        test_type: order ? order.test_type : 'Diagnostic Blood Profile',
+        summary_findings: summary_findings || 'All biomarkers within normal diagnostic clinical reference ranges.',
+        test_results_json: defaultResults,
+        pathologist_name: lab_tech || 'Dr. K. Saroja, MD (Senior Pathologist)',
+        created_at: now,
+        verification_hash: 'SHA256:' + Math.random().toString(36).substring(2, 10).toUpperCase() + Date.now().toString(36).toUpperCase()
+      });
+    }
+
+    // Complete appointment
+    if (sample.appointment_id) {
+      db.update('appointments', a => a.appointment_id === sample.appointment_id, {
+        status: 'COMPLETED',
+        updated_at: now
+      });
+    }
+  }
+
+  // Update sample record
+  db.update('samples', s => s.sample_id === sampleId, {
+    current_workflow_stage: stageNum,
+    status_label: stageMeta.label
+  });
+
+  // Update order record
+  if (sample.order_id) {
+    db.update('test_orders', o => o.order_id === sample.order_id, {
+      status: stageMeta.code
+    });
+  }
+
+  // Add timeline entry
+  db.insert('sample_workflow_timeline', {
+    id: 'TL-' + Date.now() + '-' + stageNum,
+    appointment_id: sample.appointment_id || null,
+    sample_id: sampleId,
+    stage_number: stageNum,
+    stage_name: stageMeta.name,
+    actor_name: actorName,
+    actor_role: actorRole,
+    location,
+    timestamp: now,
+    notes: stageNotes
+  });
+
+  // Notify patient
+  const profile = db.findOne('patient_profiles', p => p.patient_id === sample.patient_id);
+  if (profile) {
+    const user = db.findOne('users', u => u.id === profile.user_id);
+    if (user) {
+      db.notifyUser({
+        user_id: user.id,
+        title: `Workflow Update: ${stageMeta.name}`,
+        message: `Your sample (${sampleId}) has progressed to Stage ${stageNum}: ${stageMeta.name}. ${stageNotes}`,
+        type: 'WORKFLOW_PROGRESSION'
+      });
+
+      if (stageNum === 11) {
+        await sendNotificationEmail({
+          to: user.email,
+          subject: `Kenva Health Systems: Diagnostic Report Ready (${sampleId})`,
+          plainText: `Hello ${user.name},\n\nYour diagnostic test report for Sample ${sampleId} is ready and available for secure viewing and download in your Patient Portal.\n\n— Kenva Health Systems`,
+          htmlText: `<div style="font-family: sans-serif; color: #1e293b; max-width: 500px; padding: 20px;">
+            <h2 style="color: #0d9488;">Your Diagnostic Report is Ready</h2>
+            <p>Hello <strong>${user.name}</strong>,</p>
+            <p>Your diagnostic test report for Sample <strong>${sampleId}</strong> is complete.</p>
+            <p>You can now log in to your Kenva Patient Portal to view and download your cryptographically signed PDF report.</p>
+          </div>`,
+          userId: user.id,
+          type: 'REPORT_AVAILABLE'
+        });
+      }
+    }
+  }
+
+  db.broadcastChange({
+    event: 'WORKFLOW_STAGE_UPDATED',
+    sampleId,
+    appointmentId: sample.appointment_id,
+    stage: stageNum,
+    stage_name: stageMeta.name,
+    patientId: sample.patient_id
+  });
+
+  return res.json({
+    message: `Sample workflow advanced to Stage ${stageNum}: ${stageMeta.name}.`,
+    stage: stageNum,
+    sampleId
+  });
+});
+
+/**
+ * POST /api/hospital/samples/:sampleId/skip-stage
+ * Skip a stage with a recorded reason (e.g., in-house testing without external logistics)
+ */
+router.post('/samples/:sampleId/skip-stage', async (req, res) => {
+  const ctx = getHospitalContext(req);
+  const { sampleId } = req.params;
+  const { stageNumber, reason } = req.body;
+
+  if (!stageNumber || !reason) {
+    return res.status(400).json({ error: 'Stage number and reason for skipping are required.' });
+  }
+
+  const sample = db.findOne('samples', s => s.sample_id === sampleId);
+  if (!sample) return res.status(404).json({ error: 'Sample record not found.' });
+
+  if (!ctx.isGlobalAdmin && sample.hospital_id !== ctx.hospitalId) {
+    return res.status(403).json({ error: 'Access denied. Sample belongs to another facility.' });
+  }
+
+  const stageNum = parseInt(stageNumber, 10);
+  const stageMeta = STAGES[stageNum] || { name: `Stage ${stageNum}` };
+  const now = new Date().toISOString();
+  const hospital = db.findOne('hospitals', h => h.id === sample.hospital_id);
+  const hospitalName = hospital ? hospital.name : 'Hospital Facility';
+
+  // Insert skipped timeline entry with reason
+  db.insert('sample_workflow_timeline', {
+    id: 'TL-' + Date.now() + '-skip-' + stageNum,
+    appointment_id: sample.appointment_id || null,
+    sample_id: sampleId,
+    stage_number: stageNum,
+    stage_name: `${stageMeta.name} (Skipped)`,
+    actor_name: req.user.name,
+    actor_role: 'Authorized Staff',
+    location: hospitalName,
+    timestamp: now,
+    notes: `Stage marked as SKIPPED. Reason: ${reason.trim()}`,
+    is_skipped: true,
+    skip_reason: reason.trim()
+  });
+
+  db.logAudit({
+    actor_id: req.user.id,
+    actor_name: req.user.name,
+    actor_role: 'HOSPITAL_STAFF',
+    action: 'SKIP_WORKFLOW_STAGE',
+    target_type: 'SAMPLE',
+    target_id: sampleId,
+    details: { stageNum, reason }
+  });
+
+  db.broadcastChange({
+    event: 'WORKFLOW_STAGE_SKIPPED',
+    sampleId,
+    appointmentId: sample.appointment_id,
+    stage: stageNum,
+    reason,
+    patientId: sample.patient_id
+  });
+
+  return res.json({ message: `Stage ${stageNum} marked as skipped.`, sampleId, stageNum });
+});
+
+/**
  * POST /api/hospital/test-orders
- * Create new test order for a patient
  */
 router.post('/test-orders', (req, res) => {
   const ctx = getHospitalContext(req);
   const { appointment_id, patient_id, test_type, ordering_physician, urgency, notes } = req.body;
 
-  if (!patient_id || !test_type || !ordering_physician) {
-    return res.status(400).json({ error: 'Patient ID, test type, and ordering physician are required.' });
-  }
-
-  const patientProfile = db.findOne('patient_profiles', p => p.patient_id === patient_id);
-  if (!patientProfile) {
-    return res.status(404).json({ error: 'Patient ID not found.' });
+  if (!patient_id || !test_type) {
+    return res.status(400).json({ error: 'Patient ID and test type are required.' });
   }
 
   const hospitalId = ctx.hospitalId || req.body.hospital_id;
   if (!hospitalId) {
-    return res.status(400).json({ error: 'Hospital facility required.' });
+    return res.status(400).json({ error: 'Hospital facility is required.' });
   }
 
   const orderId = 'ORD-' + Math.floor(1000 + Math.random() * 9000);
@@ -189,7 +777,7 @@ router.post('/test-orders', (req, res) => {
     patient_id,
     hospital_id: hospitalId,
     test_type,
-    ordering_physician,
+    ordering_physician: ordering_physician || req.user.name,
     urgency: urgency || 'ROUTINE',
     status: 'ORDERED',
     notes: notes || '',
@@ -198,339 +786,14 @@ router.post('/test-orders', (req, res) => {
 
   db.insert('test_orders', newOrder);
 
-  // Workflow Timeline Entry - Stage 1: Test Order Created
-  const user = db.findOne('users', u => u.id === patientProfile.user_id);
-  
-  db.logAudit({
-    actor_id: req.user.id,
-    actor_name: req.user.name,
-    actor_role: req.user.role,
-    action: 'CREATE_TEST_ORDER',
-    target_type: 'TEST_ORDER',
-    target_id: orderId,
-    details: { patient_id, test_type, urgency }
+  db.broadcastChange({
+    event: 'TEST_ORDER_CREATED',
+    orderId,
+    appointmentId: appointment_id,
+    hospitalId
   });
 
   return res.status(201).json({ message: 'Test order created successfully.', order: newOrder });
-});
-
-/**
- * POST /api/hospital/samples
- * Register sample for a test order (Workflow Stage 3 & 4)
- */
-router.post('/samples', (req, res) => {
-  const ctx = getHospitalContext(req);
-  const { order_id, sample_type, container_id, collected_by } = req.body;
-
-  if (!order_id || !sample_type || !container_id) {
-    return res.status(400).json({ error: 'Order ID, sample type, and container ID are required.' });
-  }
-
-  const order = db.findOne('test_orders', o => o.order_id === order_id);
-  if (!order) {
-    return res.status(404).json({ error: 'Test order not found.' });
-  }
-
-  if (!ctx.isGlobalAdmin && order.hospital_id !== ctx.hospitalId) {
-    return res.status(403).json({ error: 'Access denied. Order belongs to another facility.' });
-  }
-
-  const sampleId = 'SMP-' + Math.floor(10000 + Math.random() * 90000);
-  const now = new Date().toISOString();
-  const hospital = db.findOne('hospitals', h => h.id === order.hospital_id);
-  const hospitalName = hospital ? hospital.name : 'Hospital Facility';
-
-  const newSample = {
-    sample_id: sampleId,
-    order_id: order.order_id,
-    patient_id: order.patient_id,
-    hospital_id: order.hospital_id,
-    sample_type,
-    container_id,
-    collected_at: now,
-    collected_by: collected_by || req.user.name,
-    current_workflow_stage: 4, // Stage 4: Sample Registered
-    status_label: 'Sample Registered',
-    created_at: now
-  };
-
-  db.insert('samples', newSample);
-
-  // Update order status
-  db.update('test_orders', o => o.order_id === order_id, { status: 'SAMPLE_REGISTERED' });
-
-  // Add Workflow Timeline Entries for Stage 1..4
-  const patientProfile = db.findOne('patient_profiles', p => p.patient_id === order.patient_id);
-  const patientUser = patientProfile ? db.findOne('users', u => u.id === patientProfile.user_id) : null;
-
-  db.insert('sample_workflow_timeline', {
-    id: 'TL-' + Date.now() + '-1',
-    sample_id: sampleId,
-    stage_number: 1,
-    stage_name: 'Test Order Created',
-    actor_name: order.ordering_physician,
-    actor_role: 'Ordering Physician',
-    location: hospitalName,
-    timestamp: order.created_at,
-    notes: `Test order ${order.order_id} issued for ${order.test_type}`
-  });
-
-  db.insert('sample_workflow_timeline', {
-    id: 'TL-' + Date.now() + '-2',
-    sample_id: sampleId,
-    stage_number: 2,
-    stage_name: 'Patient Registration Verified',
-    actor_name: patientUser ? patientUser.name : order.patient_id,
-    actor_role: 'Patient',
-    location: hospitalName,
-    timestamp: order.created_at,
-    notes: `Patient ID ${order.patient_id} verified at facility admission.`
-  });
-
-  db.insert('sample_workflow_timeline', {
-    id: 'TL-' + Date.now() + '-3',
-    sample_id: sampleId,
-    stage_number: 3,
-    stage_name: 'Sample Collection',
-    actor_name: collected_by || req.user.name,
-    actor_role: 'Phlebotomist / Clinical Staff',
-    location: `${hospitalName} Phlebotomy Bay 2`,
-    timestamp: now,
-    notes: `${sample_type} specimen drawn into barcoded container ${container_id}`
-  });
-
-  db.insert('sample_workflow_timeline', {
-    id: 'TL-' + Date.now() + '-4',
-    sample_id: sampleId,
-    stage_number: 4,
-    stage_name: 'Sample Registered in LIMS',
-    actor_name: req.user.name,
-    actor_role: 'Hospital Laboratory Staff',
-    location: hospitalName,
-    timestamp: now,
-    notes: `Sample assigned barcode ${sampleId} and logged into Kenva Network.`
-  });
-
-  db.logAudit({
-    actor_id: req.user.id,
-    actor_name: req.user.name,
-    actor_role: 'HOSPITAL_STAFF',
-    action: 'REGISTER_SAMPLE',
-    target_type: 'SAMPLE',
-    target_id: sampleId,
-    details: { order_id, container_id, sample_type }
-  });
-
-  return res.status(201).json({ message: 'Sample registered and barcode generated.', sample: newSample });
-});
-
-/**
- * POST /api/hospital/samples/:sampleId/advance-workflow
- * Advance sample through the 10-step journey:
- * Stage 5: Logistics Pickup
- * Stage 6: In Transit
- * Stage 7: Laboratory Received
- * Stage 8: Testing in Progress
- * Stage 9: Testing Completed
- * Stage 10: Report Generated & Available to Patient
- */
-router.post('/samples/:sampleId/advance-workflow', async (req, res) => {
-  const ctx = getHospitalContext(req);
-  const { sampleId } = req.params;
-  const { nextStage, notes, courier_name, tracking_number, temp_celsius, lab_tech, test_results_json, summary_findings } = req.body;
-
-  const sample = db.findOne('samples', s => s.sample_id === sampleId);
-  if (!sample) {
-    return res.status(404).json({ error: 'Sample record not found.' });
-  }
-
-  if (!ctx.isGlobalAdmin && sample.hospital_id !== ctx.hospitalId) {
-    return res.status(403).json({ error: 'Access denied. Sample belongs to another facility.' });
-  }
-
-  const stageNum = parseInt(nextStage, 10);
-  if (isNaN(stageNum) || stageNum < 1 || stageNum > 10) {
-    return res.status(400).json({ error: 'Stage number must be between 1 and 10.' });
-  }
-
-  const stageNames = {
-    1: 'Test Order Created',
-    2: 'Patient Registration Verified',
-    3: 'Sample Collection',
-    4: 'Sample Registered in LIMS',
-    5: 'Logistics Pickup',
-    6: 'In Transit',
-    7: 'Laboratory Received',
-    8: 'Testing in Progress',
-    9: 'Testing Completed',
-    10: 'Report Generated & Available'
-  };
-
-  const statusLabels = {
-    1: 'Ordered',
-    2: 'Patient Verified',
-    3: 'Collected',
-    4: 'Registered',
-    5: 'Logistics Pickup',
-    6: 'In Transit',
-    7: 'Laboratory Received',
-    8: 'Testing in Progress',
-    9: 'Testing Completed',
-    10: 'Report Available'
-  };
-
-  const orderStatuses = {
-    5: 'LOGISTICS_PICKUP',
-    6: 'IN_TRANSIT',
-    7: 'LAB_RECEIVED',
-    8: 'TESTING_IN_PROGRESS',
-    9: 'TESTING_COMPLETED',
-    10: 'REPORT_AVAILABLE'
-  };
-
-  const now = new Date().toISOString();
-  const hospital = db.findOne('hospitals', h => h.id === sample.hospital_id);
-  const hospitalName = hospital ? hospital.name : 'Hospital Facility';
-
-  // Update sample record
-  db.update('samples', s => s.sample_id === sampleId, {
-    current_workflow_stage: stageNum,
-    status_label: statusLabels[stageNum]
-  });
-
-  // Update test order status
-  if (orderStatuses[stageNum]) {
-    db.update('test_orders', o => o.order_id === sample.order_id, { status: orderStatuses[stageNum] });
-  }
-
-  // Handle stage specific updates
-  if (stageNum === 5 || stageNum === 6) { // Logistics
-    const existingLogistics = db.findOne('logistics_events', l => l.sample_id === sampleId);
-    if (existingLogistics) {
-      db.update('logistics_events', l => l.id === existingLogistics.id, {
-        courier_name: courier_name || existingLogistics.courier_name,
-        tracking_number: tracking_number || existingLogistics.tracking_number,
-        temperature_celsius: temp_celsius ? parseFloat(temp_celsius) : existingLogistics.temperature_celsius,
-        current_status: stageNum === 5 ? 'PICKED_UP' : 'IN_TRANSIT',
-        updated_at: now
-      });
-    } else {
-      db.insert('logistics_events', {
-        id: 'LOG-' + Date.now(),
-        sample_id: sampleId,
-        courier_name: courier_name || 'Kenva ColdChain Express',
-        tracking_number: tracking_number || 'TRACK-KVA-' + Math.floor(100000 + Math.random() * 900000),
-        pickup_time: now,
-        origin_facility: hospitalName,
-        destination_lab: 'Kenva Central Reference Laboratory #1',
-        temperature_celsius: temp_celsius ? parseFloat(temp_celsius) : 4.0,
-        current_status: stageNum === 5 ? 'PICKED_UP' : 'IN_TRANSIT',
-        updated_at: now
-      });
-    }
-  } else if (stageNum === 7 || stageNum === 8 || stageNum === 9) { // Lab
-    const existingLab = db.findOne('laboratory_records', l => l.sample_id === sampleId);
-    if (existingLab) {
-      db.update('laboratory_records', l => l.id === existingLab.id, {
-        technician_name: lab_tech || existingLab.technician_name,
-        testing_started_at: stageNum === 8 ? now : existingLab.testing_started_at,
-        testing_completed_at: stageNum === 9 ? now : existingLab.testing_completed_at,
-        test_results_json: test_results_json ? JSON.stringify(test_results_json) : existingLab.test_results_json,
-        lab_notes: notes || existingLab.lab_notes
-      });
-    } else {
-      db.insert('laboratory_records', {
-        id: 'LABREC-' + Date.now(),
-        sample_id: sampleId,
-        lab_name: 'Kenva Central Reference Laboratory #1',
-        technician_name: lab_tech || req.user.name,
-        received_at: now,
-        testing_started_at: stageNum === 8 ? now : null,
-        testing_completed_at: stageNum === 9 ? now : null,
-        test_results_json: test_results_json ? JSON.stringify(test_results_json) : null,
-        lab_notes: notes || 'Specimen received in good condition with cold-chain verification.'
-      });
-    }
-  } else if (stageNum === 10) { // Final Report Generation
-    const existingReport = db.findOne('reports', r => r.order_id === sample.order_id);
-    const defaultResults = test_results_json || [
-      { parameter: 'Hemoglobin', value: '14.2 g/dL', reference: '13.5 - 17.5 g/dL', status: 'NORMAL' },
-      { parameter: 'WBC Count', value: '6.8 x10^3 /uL', reference: '4.5 - 11.0 x10^3', status: 'NORMAL' },
-      { parameter: 'Platelet Count', value: '250 x10^3 /uL', reference: '150 - 450 x10^3', status: 'NORMAL' },
-      { parameter: 'Fasting Plasma Glucose', value: '94 mg/dL', reference: '70 - 99 mg/dL', status: 'NORMAL' },
-      { parameter: 'HbA1c', value: '5.4 %', reference: '< 5.7 %', status: 'NORMAL' }
-    ];
-
-    if (!existingReport) {
-      const reportId = 'REP-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000);
-      const order = db.findOne('test_orders', o => o.order_id === sample.order_id);
-
-      db.insert('reports', {
-        report_id: reportId,
-        order_id: sample.order_id,
-        patient_id: sample.patient_id,
-        hospital_id: sample.hospital_id,
-        report_title: order ? order.test_type + ' — Diagnostic Report' : 'Laboratory Diagnostic Report',
-        summary_findings: summary_findings || 'All tested biomarkers are within physiological reference limits. No actionable diagnostic anomalies detected.',
-        detailed_results_json: JSON.stringify(defaultResults),
-        pathologist_name: lab_tech || 'Dr. Eleanor Vance, MD (Chief Pathologist)',
-        signature_hash: 'SHA256-' + Math.random().toString(36).substr(2, 12).toUpperCase(),
-        is_final: 1,
-        created_at: now
-      });
-    } else {
-      db.update('reports', r => r.report_id === existingReport.report_id, {
-        is_final: 1,
-        summary_findings: summary_findings || existingReport.summary_findings
-      });
-    }
-
-    // Notify patient that report is available!
-    const patientProfile = db.findOne('patient_profiles', p => p.patient_id === sample.patient_id);
-    if (patientProfile) {
-      const user = db.findOne('users', u => u.id === patientProfile.user_id);
-      if (user) {
-        await sendNotificationEmail({
-          to: user.email,
-          subject: 'Kenva Health Systems — Diagnostic Laboratory Report Ready',
-          plainText: `Hello ${user.name},\n\nYour diagnostic test report for Order #${sample.order_id} is now available in your Kenva Patient Portal.\nLog in to view and download your full signed PDF report.`,
-          htmlText: `<p>Hello <strong>${user.name}</strong>,</p><p>Your diagnostic test report for Order <strong>#${sample.order_id}</strong> is ready. Log in to your Patient Portal to view and download your report.</p>`,
-          userId: user.id,
-          type: 'REPORT_AVAILABLE'
-        });
-      }
-    }
-  }
-
-  // Insert Workflow Timeline Entry
-  db.insert('sample_workflow_timeline', {
-    id: 'TL-' + Date.now() + '-' + stageNum,
-    sample_id: sampleId,
-    stage_number: stageNum,
-    stage_name: stageNames[stageNum],
-    actor_name: req.user.name,
-    actor_role: req.user.role === 'ADMIN' ? 'System Administrator' : 'Hospital Staff',
-    location: stageNum >= 7 ? 'Kenva Central Reference Lab #1' : (stageNum >= 5 ? 'ColdChain Logistics Transit' : hospitalName),
-    timestamp: now,
-    notes: notes || `Sample advanced to Stage ${stageNum}: ${stageNames[stageNum]}`
-  });
-
-  db.logAudit({
-    actor_id: req.user.id,
-    actor_name: req.user.name,
-    actor_role: req.user.role,
-    action: 'ADVANCE_SAMPLE_WORKFLOW',
-    target_type: 'SAMPLE',
-    target_id: sampleId,
-    details: { stageNum, stageName: stageNames[stageNum], notes }
-  });
-
-  return res.json({
-    message: `Sample workflow advanced to Stage ${stageNum}: ${stageNames[stageNum]}.`,
-    sampleId,
-    stageNum,
-    stageName: stageNames[stageNum]
-  });
 });
 
 module.exports = router;
